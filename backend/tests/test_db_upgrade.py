@@ -19,10 +19,14 @@ def _indexed_columns(table) -> set[str]:
 
 
 def test_all_foreign_keys_cascade():
-    """Every FK in the schema carries ON DELETE CASCADE."""
+    """Every FK in the schema carries ON DELETE CASCADE (except resume goal links)."""
+    # resume_analyses.goal_id is SET NULL by design: deleting a goal keeps the
+    # analysis history but detaches it from the deleted goal.
+    allowed = {("resume_analyses", "goal_id"): "SET NULL"}
     for table in Base.metadata.tables.values():
         for fk in table.foreign_keys:
-            assert fk.ondelete == "CASCADE", f"{table.name}.{fk.parent.name} lacks CASCADE"
+            expected = allowed.get((table.name, fk.parent.name), "CASCADE")
+            assert fk.ondelete == expected, f"{table.name}.{fk.parent.name} lacks {expected}"
 
 
 def test_hot_columns_are_indexed():
@@ -74,10 +78,10 @@ def test_ids_never_reused_after_delete():
 
 
 def test_initial_migration_covers_all_tables():
-    """The hand-written initial migration creates every mapped table."""
-    migration = Path(__file__).parent.parent / "alembic" / "versions" / "0001_initial_schema.py"
-    assert migration.exists()
-    text = migration.read_text()
+    """The migration chain creates every mapped table (0001 baseline + follow-ups)."""
+    versions_dir = Path(__file__).parent.parent / "alembic" / "versions"
+    combined = "".join(p.read_text() for p in sorted(versions_dir.glob("*.py")))
+    assert "0001_initial_schema" in combined
     for table in Base.metadata.tables:
-        assert f'"{table}"' in text, f"migration missing table {table}"
-    assert "ondelete=\"CASCADE\"" in text or "ondelete='CASCADE'" in text
+        assert f'"{table}"' in combined, f"migrations missing table {table}"
+    assert "ondelete=\"CASCADE\"" in combined or "ondelete='CASCADE'" in combined

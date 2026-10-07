@@ -185,7 +185,6 @@ class DashboardResponse(BaseModel):
 
 class ReportResponse(BaseModel):
     """Career report card for a goal."""
-
     goal_id: int
     readiness_score: int
     categories: dict[str, float]
@@ -335,3 +334,17 @@ class InterviewSessionResponse(BaseModel):
     completed_at: datetime | None = None
     questions: list[InterviewQuestionResponse] = []
     round_scores: dict[str, float] = {}
+
+
+class ResumeAnalysisResponse(BaseModel):
+    """One stored resume analysis."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    goal_id: int | None = None
+    detected_skills: list[str]
+    skill_gaps: list[str]
+    score: int
+    feedback: list[str]
+    created_at: datetime

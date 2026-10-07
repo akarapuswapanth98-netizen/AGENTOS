@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { api, getErrorMessage } from '../api/client.js'
 import AgentTrace from '../components/AgentTrace.jsx'
 import EmptyState from '../components/EmptyState.jsx'
@@ -55,6 +55,8 @@ function BuildingPlan() {
 // Dashboard: greeting, readiness overview, today's work, then goals.
 export default function Dashboard() {
   const navigate = useNavigate()
+  const [params] = useSearchParams()
+  const prefillSkills = params.get('skills') || ''
   const { user } = useAuth()
   const toast = useToast()
   const [goals, setGoals] = useState([])
@@ -195,7 +197,7 @@ export default function Dashboard() {
         </>
       )}
 
-      {submitting ? <BuildingPlan /> : <GoalForm onSubmit={handleCreate} submitting={submitting} />}
+      {submitting ? <BuildingPlan /> : <GoalForm onSubmit={handleCreate} submitting={submitting} initialSkills={prefillSkills} />}
 
       <div>
         <h2 className="mb-3 text-base font-semibold text-slate-900">Your goals</h2>

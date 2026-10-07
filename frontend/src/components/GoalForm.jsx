@@ -1,12 +1,17 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 // Controlled create-goal form. current_skills is typed comma-separated,
 // then converted to a string list on submit.
-export default function GoalForm({ onSubmit, submitting }) {
+export default function GoalForm({ onSubmit, submitting, initialSkills = '' }) {
   const [title, setTitle] = useState('')
   const [targetRole, setTargetRole] = useState('')
   const [timelineDays, setTimelineDays] = useState(28)
-  const [skillsText, setSkillsText] = useState('')
+  const [skillsText, setSkillsText] = useState(initialSkills)
+
+  // Prefill (e.g. from a resume analysis) without clobbering user edits.
+  useEffect(() => {
+    if (initialSkills) setSkillsText(initialSkills)
+  }, [initialSkills])
 
   function handleSubmit(e) {
     e.preventDefault()

@@ -54,6 +54,14 @@ export const api = {
   getGoalTasks: (goalId, status) =>
     apiClient.get(`/goals/${goalId}/tasks`, { params: status && status !== 'all' ? { status } : {} }).then((r) => r.data),
   getProgress: (goalId) => apiClient.get(`/goals/${goalId}/progress`).then((r) => r.data),
+  // --- resume ---
+  analyzeResume: (file, goalId) => {
+    const form = new FormData()
+    form.append('file', file)
+    if (goalId) form.append('goal_id', String(goalId))
+    return apiClient.post('/resume/analyze', form).then((r) => r.data)
+  },
+  getLatestResume: () => apiClient.get('/resume/latest').then((r) => r.data),
   // --- tasks ---
   getTask: (id) => apiClient.get(`/tasks/${id}`).then((r) => r.data),
   updateTaskStatus: (id, status) => apiClient.patch(`/tasks/${id}/status`, { status }).then((r) => r.data),

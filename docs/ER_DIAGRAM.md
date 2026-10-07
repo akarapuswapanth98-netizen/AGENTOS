@@ -9,11 +9,13 @@ routers also delete explicitly, so SQLite behaves the same without relying on
 erDiagram
     users ||--o{ goals : owns
     users ||--o{ interview_sessions : owns
+    users ||--o{ resume_analyses : analyzes
     goals ||--o{ tasks : has
     goals ||--o{ agent_traces : logs
     goals ||--o{ skill_scores : tracks
     goals ||--o{ readiness_snapshots : trends
     goals ||--o{ interview_sessions : interviews
+    goals ||--o{ resume_analyses : compared
     tasks ||--o{ submissions : answers
     interview_sessions ||--o{ interview_questions : asks
 
@@ -100,6 +102,16 @@ erDiagram
         int goal_id FK
         date date
         int score
+    }
+    resume_analyses {
+        int id PK
+        int user_id FK
+        int goal_id FK_NULL
+        json detected_skills
+        json skill_gaps
+        int score
+        json feedback
+        datetime created_at
     }
 ```
 

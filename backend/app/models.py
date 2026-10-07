@@ -154,3 +154,19 @@ class ReadinessSnapshot(Base):
     goal_id: Mapped[int] = mapped_column(Integer, ForeignKey("goals.id", ondelete="CASCADE"), index=True, nullable=False)
     date: Mapped[date] = mapped_column(Date, nullable=False)
     score: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+
+class ResumeAnalysis(Base):
+    """Stored result of one resume analysis. The raw file is never kept."""
+
+    __tablename__ = "resume_analyses"
+    __table_args__ = {"sqlite_autoincrement": True}
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    goal_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("goals.id", ondelete="SET NULL"), nullable=True)
+    detected_skills: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    skill_gaps: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    score: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    feedback: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, nullable=False)
