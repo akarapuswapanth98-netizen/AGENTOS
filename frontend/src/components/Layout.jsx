@@ -41,6 +41,7 @@ export default function Layout({ children }) {
             <Link to="/" className={linkCls(pathname === '/')}>Dashboard</Link>
             <Link to="/interviews" className={linkCls(pathname.startsWith('/interviews'))}>Interviews</Link>
             <Link to="/resume" className={linkCls(pathname === '/resume')}>Resume</Link>
+            <Link to="/review" className={linkCls(pathname === '/review')}>Review</Link>
             <Link to="/settings" className={linkCls(pathname === '/settings')}>Settings</Link>
             <p className="px-3 pt-4 text-xs text-slate-400">Goals and tasks open from the dashboard.</p>
           </nav>

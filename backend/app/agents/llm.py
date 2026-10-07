@@ -198,6 +198,9 @@ def _mock_output(agent: str, context: dict[str, Any] | None) -> dict[str, Any]:
             steps.append(f"Use your strength in '{strong[0]}' to mentor-style explain a hard topic in writing.")
         steps.append("Book a mock interview round focused on your two weakest categories, then review the feedback.")
         return {"next_steps": steps[:5]}
+    if agent == "review_question":
+        skill = str(ctx.get("skill") or "general")
+        return {"question": f"Explain one core {skill} concept in your own words, with a short example."}
     return {"ok": True}
 
 

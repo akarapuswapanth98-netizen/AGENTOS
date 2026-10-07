@@ -40,10 +40,16 @@ def test_hot_columns_are_indexed():
         "interview_sessions": {"user_id", "goal_id", "status"},
         "interview_questions": {"session_id"},
         "readiness_snapshots": {"goal_id"},
+        "review_items": {"user_id", "goal_id"},
     }
     for table_name, columns in expectations.items():
         covered = _indexed_columns(Base.metadata.tables[table_name])
         assert columns <= covered, f"{table_name} missing indexes for {columns - covered}"
+    assert "ix_reviews_user_due" in {i.name for i in Base.metadata.tables["review_items"].indexes}
+    unique_cols = [tuple(sorted(c.name for c in constraint.columns))
+                   for constraint in Base.metadata.tables["review_items"].constraints
+                   if constraint.__class__.__name__ == "UniqueConstraint"]
+    assert ("goal_id", "skill", "user_id") in unique_cols
 
 
 def test_composite_indexes_exist():

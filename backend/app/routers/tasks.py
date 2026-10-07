@@ -20,6 +20,8 @@ from app.schemas import (
 )
 from app.utils.rate_limit import QuotaExceeded
 from app.utils.readiness import record_snapshot
+from app.utils.review_items import upsert_review_item
+from app.utils.review_schedule import PASS_SCORE as REVIEW_PASS_SCORE
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/tasks", tags=["tasks"])
@@ -111,6 +113,11 @@ def submit_answer(
         skill_row.updated_at = datetime.now()
     db.add(skill_row)
     db.commit()
+
+    # Spaced repetition: low scores schedule the skill for review tomorrow.
+    if score < REVIEW_PASS_SCORE:
+        upsert_review_item(db, user.id, task.goal_id, task.skill)
+        logger.info("Scheduled review for skill=%s after score=%s", task.skill, score)
 
     remedial: Task | None = None
     if score < PASS_SCORE:

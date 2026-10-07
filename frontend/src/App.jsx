@@ -12,6 +12,7 @@ import NotFound from './pages/NotFound.jsx'
 import Register from './pages/Register.jsx'
 import Report from './pages/Report.jsx'
 import Resume from './pages/Resume.jsx'
+import Review from './pages/Review.jsx'
 import Settings from './pages/Settings.jsx'
 import TaskDetail from './pages/TaskDetail.jsx'
 
@@ -31,6 +32,7 @@ export default function App() {
             <Route path="/interviews" element={<ProtectedRoute><Interviews /></ProtectedRoute>} />
             <Route path="/interviews/:id" element={<ProtectedRoute><InterviewRunner /></ProtectedRoute>} />
           <Route path="/resume" element={<ProtectedRoute><Resume /></ProtectedRoute>} />
+          <Route path="/review" element={<ProtectedRoute><Review /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>

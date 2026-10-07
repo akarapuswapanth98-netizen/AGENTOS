@@ -10,12 +10,14 @@ erDiagram
     users ||--o{ goals : owns
     users ||--o{ interview_sessions : owns
     users ||--o{ resume_analyses : analyzes
+    users ||--o{ review_items : reviews
     goals ||--o{ tasks : has
     goals ||--o{ agent_traces : logs
     goals ||--o{ skill_scores : tracks
     goals ||--o{ readiness_snapshots : trends
     goals ||--o{ interview_sessions : interviews
     goals ||--o{ resume_analyses : compared
+    goals ||--o{ review_items : practices
     tasks ||--o{ submissions : answers
     interview_sessions ||--o{ interview_questions : asks
 
@@ -111,6 +113,17 @@ erDiagram
         json skill_gaps
         int score
         json feedback
+        datetime created_at
+    }
+    review_items {
+        int id PK
+        int user_id FK
+        int goal_id FK_NULL
+        string skill
+        int stage
+        date due_date
+        int last_score
+        datetime last_reviewed_at
         datetime created_at
     }
 ```

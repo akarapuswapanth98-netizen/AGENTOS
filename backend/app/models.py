@@ -1,7 +1,7 @@
 """SQLAlchemy ORM models for AGENTOS."""
 from datetime import date, datetime
 
-from sqlalchemy import JSON, Date, DateTime, Float, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import JSON, Date, DateTime, Float, ForeignKey, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -169,4 +169,25 @@ class ResumeAnalysis(Base):
     skill_gaps: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
     score: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     feedback: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, nullable=False)
+
+
+class ReviewItem(Base):
+    """One skill due for spaced-repetition review. Unique per user/skill/goal."""
+
+    __tablename__ = "review_items"
+    __table_args__ = (
+        Index("ix_reviews_user_due", "user_id", "due_date"),
+        UniqueConstraint("user_id", "skill", "goal_id"),
+        {"sqlite_autoincrement": True},
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    goal_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("goals.id", ondelete="CASCADE"), index=True, nullable=True)
+    skill: Mapped[str] = mapped_column(String(128), nullable=False)
+    stage: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    due_date: Mapped[date] = mapped_column(Date, nullable=False)
+    last_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    last_reviewed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, nullable=False)

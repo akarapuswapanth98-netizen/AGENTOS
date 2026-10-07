@@ -62,6 +62,11 @@ export const api = {
     return apiClient.post('/resume/analyze', form).then((r) => r.data)
   },
   getLatestResume: () => apiClient.get('/resume/latest').then((r) => r.data),
+  // --- reviews ---
+  getDueReviews: () => apiClient.get('/reviews/due').then((r) => r.data),
+  startReview: (itemId) => apiClient.post(`/reviews/${itemId}/start`).then((r) => r.data),
+  answerReview: (itemId, question_text, answer_text) =>
+    apiClient.post(`/reviews/${itemId}/answer`, { question_text, answer_text }).then((r) => r.data),
   // --- tasks ---
   getTask: (id) => apiClient.get(`/tasks/${id}`).then((r) => r.data),
   updateTaskStatus: (id, status) => apiClient.patch(`/tasks/${id}/status`, { status }).then((r) => r.data),

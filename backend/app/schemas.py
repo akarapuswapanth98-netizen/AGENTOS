@@ -338,7 +338,6 @@ class InterviewSessionResponse(BaseModel):
 
 class ResumeAnalysisResponse(BaseModel):
     """One stored resume analysis."""
-
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -348,3 +347,50 @@ class ResumeAnalysisResponse(BaseModel):
     score: int
     feedback: list[str]
     created_at: datetime
+
+
+class ReviewItemResponse(BaseModel):
+    """One spaced-repetition review item."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    goal_id: int | None = None
+    skill: str
+    stage: int
+    due_date: date
+    last_score: int | None = None
+    last_reviewed_at: datetime | None = None
+    created_at: datetime
+
+
+class ReviewDueResponse(BaseModel):
+    """Due review items plus a count for the dashboard badge."""
+
+    items: list[ReviewItemResponse]
+    count: int
+
+
+class ReviewQuestionResponse(BaseModel):
+    """A fresh practice question (not stored server-side)."""
+
+    item_id: int
+    skill: str
+    question: str
+
+
+class ReviewAnswerRequest(BaseModel):
+    """Answer a review question; question_text is echoed back by the client."""
+
+    question_text: str = Field(default="", max_length=20000)
+    answer_text: str = Field(default="", max_length=20000)
+
+
+class ReviewAnswerResponse(BaseModel):
+    """Review score, feedback, and the next due date."""
+
+    item_id: int
+    score: int
+    feedback: dict[str, Any]
+    stage: int
+    next_due_date: date
