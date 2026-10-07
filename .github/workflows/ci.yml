@@ -20,6 +20,7 @@ jobs:
           cache: pip
           cache-dependency-path: backend/requirements.txt
       - run: pip install -r requirements.txt
+      - run: python -m app.ml.train
       - run: python -m pytest tests/ -q
         env:
           USE_MOCK_LLM: "true"
@@ -56,6 +57,7 @@ jobs:
           cache: pip
           cache-dependency-path: backend/requirements.txt
       - run: pip install -r requirements.txt
+      - run: python -m app.ml.train
       - run: python -m alembic -c alembic.ini upgrade head
       - run: python -m pytest tests/ -q
 
