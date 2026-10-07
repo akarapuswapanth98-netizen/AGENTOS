@@ -1,0 +1,24 @@
+# AGENTOS local + Docker setup. No secrets live in this file;
+# backend configuration comes from backend/.env (see backend/.env.example).
+services:
+  backend:
+    build: ./backend
+    env_file: ./backend/.env
+    environment:
+      DATABASE_URL: sqlite:////data/agentos.db
+    volumes:
+      - agentos-data:/data
+    ports:
+      - "8000:8000"
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://127.0.0.1:8000
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  agentos-data:

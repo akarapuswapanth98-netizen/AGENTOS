@@ -1,0 +1,6 @@
+.env
+.env.*
+*.db
+*.joblib
+__pycache__
+.pytest_cache

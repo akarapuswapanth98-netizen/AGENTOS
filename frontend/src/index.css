@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-slate-100 text-slate-800 antialiased;
+}
+
+/* Print: only the report card, no nav/sidebar/buttons. */
+@media print {
+  header,
+  aside,
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: white;
+  }
+  main {
+    padding: 0 !important;
+  }
+}
