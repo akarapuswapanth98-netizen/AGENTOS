@@ -12,3 +12,5 @@ PyJWT==2.10.1
 scikit-learn==1.5.2
 joblib==1.4.2
 reportlab==5.0.1
+alembic==1.19.1
+psycopg2-binary==2.9.13
