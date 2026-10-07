@@ -174,7 +174,6 @@ class ResumeAnalysis(Base):
 
 class ReviewItem(Base):
     """One skill due for spaced-repetition review. Unique per user/skill/goal."""
-
     __tablename__ = "review_items"
     __table_args__ = (
         Index("ix_reviews_user_due", "user_id", "due_date"),
@@ -190,4 +189,28 @@ class ReviewItem(Base):
     due_date: Mapped[date] = mapped_column(Date, nullable=False)
     last_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
     last_reviewed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, nullable=False)
+
+
+class QuizAttempt(Base):
+    """One 5-question practice quiz. Answers stay hidden until submitted."""
+
+    __tablename__ = "quiz_attempts"
+    __table_args__ = (
+        Index("ix_quiz_user_started", "user_id", "started_at"),
+        {"sqlite_autoincrement": True},
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    goal_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("goals.id", ondelete="SET NULL"), index=True, nullable=True)
+    skill: Mapped[str] = mapped_column(String(60), nullable=False)
+    questions: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    answers: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    score: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="in_progress", index=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, nullable=False)
+    submitted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    elapsed_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    timed_out: Mapped[bool] = mapped_column(nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, nullable=False)

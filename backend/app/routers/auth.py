@@ -11,6 +11,7 @@ from app.models import (
     Goal,
     InterviewQuestion,
     InterviewSession,
+    QuizAttempt,
     ReadinessSnapshot,
     ResumeAnalysis,
     ReviewItem,
@@ -123,6 +124,7 @@ def delete_account(
         db.query(SkillScore).filter(SkillScore.goal_id.in_(goal_ids)).delete(synchronize_session=False)
         db.query(Goal).filter(Goal.id.in_(goal_ids)).delete(synchronize_session=False)
     db.query(ResumeAnalysis).filter(ResumeAnalysis.user_id == user.id).delete(synchronize_session=False)
+    db.query(QuizAttempt).filter(QuizAttempt.user_id == user.id).delete(synchronize_session=False)
     db.query(ReviewItem).filter(ReviewItem.user_id == user.id).delete(synchronize_session=False)
     db.query(User).filter(User.id == user.id).delete(synchronize_session=False)
     db.commit()

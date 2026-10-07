@@ -11,6 +11,7 @@ erDiagram
     users ||--o{ interview_sessions : owns
     users ||--o{ resume_analyses : analyzes
     users ||--o{ review_items : reviews
+    users ||--o{ quiz_attempts : quizzes
     goals ||--o{ tasks : has
     goals ||--o{ agent_traces : logs
     goals ||--o{ skill_scores : tracks
@@ -18,6 +19,7 @@ erDiagram
     goals ||--o{ interview_sessions : interviews
     goals ||--o{ resume_analyses : compared
     goals ||--o{ review_items : practices
+    goals ||--o{ quiz_attempts : tested
     tasks ||--o{ submissions : answers
     interview_sessions ||--o{ interview_questions : asks
 
@@ -124,6 +126,21 @@ erDiagram
         date due_date
         int last_score
         datetime last_reviewed_at
+        datetime created_at
+    }
+    quiz_attempts {
+        int id PK
+        int user_id FK
+        int goal_id FK_NULL
+        string skill
+        json questions
+        json answers
+        int score
+        string status
+        datetime started_at
+        datetime submitted_at
+        int elapsed_seconds
+        bool timed_out
         datetime created_at
     }
 ```

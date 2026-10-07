@@ -54,6 +54,11 @@ export const api = {
   getGoalTasks: (goalId, status) =>
     apiClient.get(`/goals/${goalId}/tasks`, { params: status && status !== 'all' ? { status } : {} }).then((r) => r.data),
   getProgress: (goalId) => apiClient.get(`/goals/${goalId}/progress`).then((r) => r.data),
+  // --- quizzes ---
+  startQuiz: (skill, goal_id) => apiClient.post('/quizzes/start', { skill, goal_id }).then((r) => r.data),
+  answerQuiz: (id, answers) => apiClient.post(`/quizzes/${id}/submit`, { answers }).then((r) => r.data),
+  getQuizHistory: () => apiClient.get('/quizzes/history').then((r) => r.data),
+  getQuiz: (id) => apiClient.get(`/quizzes/${id}`).then((r) => r.data),
   // --- resume ---
   analyzeResume: (file, goalId) => {
     const form = new FormData()

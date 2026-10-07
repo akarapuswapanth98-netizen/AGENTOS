@@ -2,7 +2,7 @@
 from datetime import date, datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 TaskType = Literal["learn", "practice", "project", "remedial"]
 TaskStatus = Literal["pending", "in_progress", "completed"]
@@ -394,3 +394,92 @@ class ReviewAnswerResponse(BaseModel):
     feedback: dict[str, Any]
     stage: int
     next_due_date: date
+
+
+class QuizStartRequest(BaseModel):
+    """Start a quiz for a skill, optionally linked to a goal."""
+
+    skill: str = Field(min_length=1, max_length=60)
+    goal_id: int | None = None
+
+
+class QuizQuestionPublic(BaseModel):
+    """One question without the answer or explanation."""
+
+    question: str
+    options: list[str]
+
+
+class QuizStartResponse(BaseModel):
+    """New attempt id plus answer-free questions."""
+
+    id: int
+    skill: str
+    questions: list[QuizQuestionPublic]
+    time_limit_seconds: int
+
+
+class QuizSubmitRequest(BaseModel):
+    """Five answers (0-3) or null for skipped questions."""
+
+    answers: list[int | None] = Field(min_length=5, max_length=5)
+
+    @field_validator("answers")
+    @classmethod
+    def _in_range(cls, values: list[int | None]) -> list[int | None]:
+        """Each answer must be 0-3 or null (skipped)."""
+        for v in values:
+            if v is not None and (not isinstance(v, int) or isinstance(v, bool) or not 0 <= v <= 3):
+                raise ValueError("Each answer must be 0-3 or null")
+        return values
+
+
+class QuizResultItem(BaseModel):
+    """Per-question grading with the correct answer and explanation."""
+
+    question: str
+    options: list[str]
+    your_answer: int | None
+    correct_index: int
+    correct: bool
+    explanation: str
+
+
+class QuizSubmitResponse(BaseModel):
+    """Quiz score, per-question results, timeout flag, review side effect."""
+
+    id: int
+    score: int
+    results: list[QuizResultItem]
+    timed_out: bool
+    elapsed_seconds: int
+    review_created: bool
+
+
+class QuizHistoryItem(BaseModel):
+    """One submitted attempt for the history list."""
+
+    id: int
+    skill: str
+    score: int
+    elapsed_seconds: int
+    timed_out: bool
+    submitted_at: datetime | None = None
+
+
+class QuizAttemptResponse(BaseModel):
+    """One attempt; answers included only after submission."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    goal_id: int | None = None
+    skill: str
+    questions: list[dict[str, Any]]
+    answers: list[int | None] | None = None
+    score: int | None = None
+    status: str
+    started_at: datetime
+    submitted_at: datetime | None = None
+    elapsed_seconds: int | None = None
+    timed_out: bool

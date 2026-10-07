@@ -20,9 +20,9 @@ def _indexed_columns(table) -> set[str]:
 
 def test_all_foreign_keys_cascade():
     """Every FK in the schema carries ON DELETE CASCADE (except resume goal links)."""
-    # resume_analyses.goal_id is SET NULL by design: deleting a goal keeps the
-    # analysis history but detaches it from the deleted goal.
-    allowed = {("resume_analyses", "goal_id"): "SET NULL"}
+    # resume_analyses.goal_id and quiz_attempts.goal_id are SET NULL by design:
+    # deleting a goal keeps history but detaches it from the deleted goal.
+    allowed = {("resume_analyses", "goal_id"): "SET NULL", ("quiz_attempts", "goal_id"): "SET NULL"}
     for table in Base.metadata.tables.values():
         for fk in table.foreign_keys:
             expected = allowed.get((table.name, fk.parent.name), "CASCADE")
@@ -41,6 +41,7 @@ def test_hot_columns_are_indexed():
         "interview_questions": {"session_id"},
         "readiness_snapshots": {"goal_id"},
         "review_items": {"user_id", "goal_id"},
+        "quiz_attempts": {"user_id", "goal_id", "status"},
     }
     for table_name, columns in expectations.items():
         covered = _indexed_columns(Base.metadata.tables[table_name])
