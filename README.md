@@ -1,7 +1,7 @@
 # AGENTOS — AI career planner that turns a goal into an executable, adaptive plan.
 
-[![CI](https://github.com/YOUR_USERNAME/agentos/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/agentos/actions/workflows/ci.yml)
-<!-- Replace YOUR_USERNAME/agentos with your repo path after pushing to GitHub. -->
+[![CI](https://github.com/akarapuswapanth98-netizen/AGENTOS/actions/workflows/ci.yml/badge.svg)](https://github.com/akarapuswapanth98-netizen/AGENTOS/actions/workflows/ci.yml)
+<!-- Badge now points at akarapuswapanth98-netizen/AGENTOS. -->
 
 ## Problem
 
