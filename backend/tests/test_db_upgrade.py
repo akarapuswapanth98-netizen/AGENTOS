@@ -102,3 +102,10 @@ def test_all_tables_use_autoincrement():
     """Every table opts into SQLite AUTOINCREMENT (no id reuse anywhere)."""
     for table in Base.metadata.tables.values():
         assert table.kwargs.get("sqlite_autoincrement") is True, table.name
+
+
+def test_er_diagram_mentions_every_table():
+    """docs/ER_DIAGRAM.md names every mapped table (mermaid entity per table)."""
+    doc = (Path(__file__).parent.parent.parent / "docs" / "ER_DIAGRAM.md").read_text()
+    for table in Base.metadata.tables:
+        assert f"    {table} {{" in doc, f"ER doc missing table {table}"
