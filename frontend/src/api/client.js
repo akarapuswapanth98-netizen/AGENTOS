@@ -76,6 +76,7 @@ export const api = {
   // --- tasks ---
   getTask: (id) => apiClient.get(`/tasks/${id}`).then((r) => r.data),
   updateTaskStatus: (id, status) => apiClient.patch(`/tasks/${id}/status`, { status }).then((r) => r.data),
+  updateTaskDueDate: (id, due_date) => apiClient.patch(`/tasks/${id}/due-date`, { due_date }).then((r) => r.data),
   getTutor: (id) => apiClient.post(`/tasks/${id}/tutor`).then((r) => r.data),
   submitAnswer: (id, answer_text) => apiClient.post(`/tasks/${id}/submit`, { answer_text }).then((r) => r.data),
   getSubmissions: (id) => apiClient.get(`/tasks/${id}/submissions`).then((r) => r.data),

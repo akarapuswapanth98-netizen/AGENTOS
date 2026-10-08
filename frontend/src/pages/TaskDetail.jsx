@@ -20,6 +20,7 @@ export default function TaskDetail() {
   const [history, setHistory] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [dueInput, setDueInput] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -28,12 +29,36 @@ export default function TaskDetail() {
       const [t, h] = await Promise.all([api.getTask(id), api.getSubmissions(id)])
       setTask(t)
       setHistory(h)
+      setDueInput(t.due_date ? t.due_date.slice(0, 10) : '')
     } catch (err) {
       setError(getErrorMessage(err, 'Could not load task'))
     } finally {
       setLoading(false)
     }
   }, [id])
+
+  async function saveDueDate(value) {
+    setError('')
+    try {
+      const updated = await api.updateTaskDueDate(id, value || null)
+      setTask(updated)
+      setDueInput(updated.due_date ? updated.due_date.slice(0, 10) : '')
+      toast.success(value ? 'Due date saved' : 'Due date cleared')
+    } catch (err) {
+      const msg = getErrorMessage(err, 'Could not save due date')
+      setError(msg)
+      toast.error(msg)
+    }
+  }
+
+  function handleDueDate(e) {
+    e.preventDefault()
+    saveDueDate(dueInput || null)
+  }
+
+  function clearDueDate() {
+    saveDueDate(null)
+  }
 
   useEffect(() => { load() }, [load])
 
@@ -88,6 +113,15 @@ export default function TaskDetail() {
         <h1 className="mt-2 text-xl font-bold text-slate-900">{task.title}</h1>
         <p className="mt-2 text-sm text-slate-600">{task.description}</p>
         <p className="mt-2 text-xs text-slate-400">Week {task.week} · #{task.order} · {task.attempts} attempt(s){task.score != null && ` · score ${task.score}`}</p>
+        <form onSubmit={handleDueDate} className="mt-3 flex flex-wrap items-center gap-2">
+          <label className="text-xs text-slate-500">Due date{task.due_date ? ` (now ${new Date(task.due_date).toLocaleDateString()})` : ' (none)'}</label>
+          <input type="date" value={dueInput} onChange={(e) => setDueInput(e.target.value)}
+            className="rounded-lg border border-slate-300 px-2 py-1 text-xs focus:border-indigo-500 focus:outline-none" />
+          <button className="rounded-lg bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-200">Save</button>
+          {task.due_date && (
+            <button type="button" onClick={clearDueDate} className="rounded-lg px-3 py-1 text-xs font-semibold text-red-600 hover:bg-red-50">Clear</button>
+          )}
+        </form>
       </div>
 
       <div className="rounded-xl bg-white p-5 shadow-sm">

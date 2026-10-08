@@ -1,6 +1,6 @@
 """Task endpoints: detail, status update, tutor, submit (validator + adaptive), history."""
 import logging
-from datetime import datetime
+from datetime import date, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -11,12 +11,14 @@ from app.database import get_db
 from app.deps import get_current_user, get_owned_task
 from app.models import AgentTrace, SkillScore, Submission, Task, User
 from app.schemas import (
+    DueDateUpdate,
     SubmissionResponse,
     SubmitRequest,
     SubmitResponse,
     TaskResponse,
     TaskStatusUpdate,
     TutorResponse,
+    to_task_response,
 )
 from app.utils.badges import check_and_award_badges, record_activity_day
 from app.utils.rate_limit import QuotaExceeded
@@ -36,7 +38,7 @@ def get_task(
 ) -> TaskResponse:
     """Return a single task."""
     task, _ = get_owned_task(db, task_id, user.id)
-    return TaskResponse.model_validate(task)
+    return to_task_response(task)
 
 
 @router.patch("/{task_id}/status", response_model=TaskResponse)
@@ -54,7 +56,23 @@ def update_task_status(
     db.commit()
     db.refresh(task)
     record_snapshot(db, task.goal_id)
-    return TaskResponse.model_validate(task)
+    return to_task_response(task)
+
+
+@router.patch("/{task_id}/due-date", response_model=TaskResponse)
+def update_task_due_date(
+    task_id: int,
+    payload: DueDateUpdate,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> TaskResponse:
+    """Set or clear a task's due date. Completed tasks keep dates, never overdue."""
+    task, _ = get_owned_task(db, task_id, user.id)
+    task.due_date = datetime.combine(payload.due_date, datetime.min.time()) if payload.due_date else None
+    db.add(task)
+    db.commit()
+    db.refresh(task)
+    return to_task_response(task)
 
 
 @router.post("/{task_id}/tutor", response_model=TutorResponse)
@@ -144,7 +162,7 @@ def submit_answer(
                 task_type="remedial",
                 skill=task.skill,
                 status="pending",
-                due_date=task.due_date,
+                due_date=datetime.now() + timedelta(days=3),
             )
             db.add(remedial)
             db.commit()
@@ -172,7 +190,7 @@ def submit_answer(
         score=score,
         feedback=feedback,
         task_status=task.status,
-        remedial_task=TaskResponse.model_validate(remedial) if remedial else None,
+        remedial_task=to_task_response(remedial) if remedial else None,
         message=msg,
         newly_earned_badges=newly_earned,
     )

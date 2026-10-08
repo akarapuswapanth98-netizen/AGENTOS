@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { api, getErrorMessage } from '../api/client.js'
 import AgentTrace from '../components/AgentTrace.jsx'
 import EmptyState from '../components/EmptyState.jsx'
@@ -9,7 +9,7 @@ import Skeleton from '../components/Skeleton.jsx'
 import TaskCard from '../components/TaskCard.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 
-const FILTERS = ['all', 'pending', 'in_progress', 'completed']
+const FILTERS = ['all', 'pending', 'in_progress', 'completed', 'overdue']
 
 // Goal overview: analysis header, progress panel, week-grouped tasks, agent trace.
 export default function GoalDetail() {
@@ -20,6 +20,11 @@ export default function GoalDetail() {
   const [trace, setTrace] = useState([])
   const [tasks, setTasks] = useState([])
   const [filter, setFilter] = useState('all')
+  const [params] = useSearchParams()
+  const initialFilter = params.get('filter')
+  useEffect(() => {
+    if (initialFilter && FILTERS.includes(initialFilter)) setFilter(initialFilter)
+  }, [initialFilter])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [replanning, setReplanning] = useState(false)
@@ -93,9 +98,13 @@ export default function GoalDetail() {
   }
 
   // Re-query the filterable tasks endpoint when the status filter changes.
+  // "overdue" is computed client-side from the server's overdue flags.
   useEffect(() => {
     let cancelled = false
-    api.getGoalTasks(id, filter).then((t) => { if (!cancelled) setTasks(t) }).catch(() => {})
+    const status = filter === 'overdue' ? 'all' : filter
+    api.getGoalTasks(id, status).then((t) => {
+      if (!cancelled) setTasks(filter === 'overdue' ? t.filter((x) => x.is_overdue) : t)
+    }).catch(() => {})
     return () => { cancelled = true }
   }, [id, filter])
 

@@ -49,6 +49,7 @@ def test_hot_columns_are_indexed():
         covered = _indexed_columns(Base.metadata.tables[table_name])
         assert columns <= covered, f"{table_name} missing indexes for {columns - covered}"
     assert "ix_reviews_user_due" in {i.name for i in Base.metadata.tables["review_items"].indexes}
+    assert "ix_tasks_goal_due" in {i.name for i in Base.metadata.tables["tasks"].indexes}
     assert "ix_activity_user_day" in {i.name for i in Base.metadata.tables["activity_days"].indexes}
     unique_cols = [tuple(sorted(c.name for c in constraint.columns))
                    for constraint in Base.metadata.tables["review_items"].constraints

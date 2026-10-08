@@ -52,6 +52,19 @@ class TaskResponse(BaseModel):
     due_date: datetime | None = None
     completed_at: datetime | None = None
     created_at: datetime
+    is_overdue: bool = False
+    days_overdue: int = 0
+
+
+def to_task_response(task, today: date | None = None) -> "TaskResponse":
+    """Build a TaskResponse with server-computed overdue flags."""
+    from app.utils.task_dates import days_overdue, is_overdue
+
+    day = today or date.today()
+    data = TaskResponse.model_validate(task)
+    data.is_overdue = is_overdue(task.due_date, task.status, day)
+    data.days_overdue = days_overdue(task.due_date, day) if data.is_overdue else 0
+    return data
 
 
 class TraceResponse(BaseModel):
@@ -502,8 +515,20 @@ class LockedBadge(BaseModel):
 
 class MeProgressResponse(BaseModel):
     """Streaks plus earned and locked badges for the current user."""
-
     current_streak: int
     longest_streak: int
     earned: list[EarnedBadge]
     locked: list[LockedBadge]
+
+
+class DueDateUpdate(BaseModel):
+    """Set or clear a task's due date (ISO date string; 422 on bad input)."""
+
+    due_date: date | None = None
+
+
+class OverdueResponse(BaseModel):
+    """The user's overdue tasks, most overdue first, plus a count."""
+
+    items: list[TaskResponse]
+    count: int

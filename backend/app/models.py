@@ -48,6 +48,7 @@ class Task(Base):
     __tablename__ = "tasks"
     __table_args__ = (
         Index("ix_tasks_goal_status", "goal_id", "status"),
+        Index("ix_tasks_goal_due", "goal_id", "due_date"),
         {"sqlite_autoincrement": True},
     )
 

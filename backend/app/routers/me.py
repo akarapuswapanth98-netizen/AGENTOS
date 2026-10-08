@@ -7,10 +7,11 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.deps import get_current_user
-from app.models import ActivityDay, User, UserBadge
-from app.schemas import EarnedBadge, LockedBadge, MeProgressResponse
+from app.models import ActivityDay, Goal, Task, User, UserBadge
+from app.schemas import EarnedBadge, LockedBadge, MeProgressResponse, OverdueResponse, to_task_response
 from app.utils.badges import BADGES
 from app.utils.streaks import current_streak, longest_streak
+from app.utils.task_dates import is_overdue
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/me", tags=["me"])
@@ -30,3 +31,16 @@ def my_progress(db: Session = Depends(get_db), user: User = Depends(get_current_
         earned=[EarnedBadge(badge=r.badge, awarded_at=r.awarded_at) for r in earned_rows],
         locked=[LockedBadge(badge=b, hint=h) for b, h in BADGES.items() if b not in earned_keys],
     )
+
+
+@router.get("/overdue", response_model=OverdueResponse)
+def my_overdue(db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> OverdueResponse:
+    """The user's overdue incomplete tasks, most overdue first."""
+    today = date.today()
+    goal_ids = [g.id for g in db.query(Goal.id).filter(Goal.user_id == user.id).all()]
+    tasks = db.query(Task).filter(Task.goal_id.in_(goal_ids)).all() if goal_ids else []
+    overdue = sorted(
+        (t for t in tasks if is_overdue(t.due_date, t.status, today)),
+        key=lambda t: t.due_date or today,
+    )
+    return OverdueResponse(items=[to_task_response(t, today) for t in overdue], count=len(overdue))

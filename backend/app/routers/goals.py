@@ -16,6 +16,7 @@ from app.schemas import (
     GoalWithPlanResponse,
     TaskResponse,
     TraceResponse,
+    to_task_response,
 )
 from app.utils.readiness import record_snapshot
 
@@ -48,7 +49,7 @@ def create_goal(
     trace = db.query(AgentTrace).filter(AgentTrace.goal_id == goal.id).order_by(AgentTrace.id).all()
     return GoalWithPlanResponse(
         goal=GoalResponse.model_validate(goal),
-        tasks=[TaskResponse.model_validate(t) for t in tasks],
+        tasks=[to_task_response(t) for t in tasks],
         trace=[TraceResponse.model_validate(t) for t in trace],
     )
 
@@ -67,7 +68,7 @@ def get_goal(goal_id: int, db: Session = Depends(get_db), user: User = Depends(g
     tasks = db.query(Task).filter(Task.goal_id == goal.id).order_by(Task.week, Task.order).all()
     return GoalDetailResponse(
         goal=GoalResponse.model_validate(goal),
-        tasks=[TaskResponse.model_validate(t) for t in tasks],
+        tasks=[to_task_response(t) for t in tasks],
     )
 
 
@@ -111,7 +112,7 @@ def replan_goal(
     trace = db.query(AgentTrace).filter(AgentTrace.goal_id == goal.id).order_by(AgentTrace.id).all()
     return GoalWithPlanResponse(
         goal=GoalResponse.model_validate(goal),
-        tasks=[TaskResponse.model_validate(t) for t in tasks],
+        tasks=[to_task_response(t) for t in tasks],
         trace=[TraceResponse.model_validate(t) for t in trace],
     )
 
@@ -168,4 +169,4 @@ def list_goal_tasks(
             raise HTTPException(status_code=422, detail="Invalid status filter")
         q = q.filter(Task.status == status)
     rows = q.order_by(Task.week, Task.order).all()
-    return [TaskResponse.model_validate(r) for r in rows]
+    return [to_task_response(r) for r in rows]

@@ -155,10 +155,11 @@ export default function Dashboard() {
               <p className="text-xs text-slate-500">Due today</p>
               <p className="text-2xl font-bold text-slate-900">{dash.today_tasks.length}</p>
             </div>
-            <div className="rounded-xl bg-white p-4 shadow-sm">
+            <Link to={dash.overdue_tasks.length ? `/goals/${dash.overdue_tasks[0].goal_id}?filter=overdue` : '/'} className="block rounded-xl bg-white p-4 shadow-sm transition hover:shadow-md">
               <p className="text-xs text-slate-500">Overdue {dash.overdue_count > 0 && <span className="ml-1 rounded-full bg-red-100 px-2 py-0.5 font-semibold text-red-700">{dash.overdue_count}</span>}</p>
               <p className="text-2xl font-bold text-slate-900">{dash.overdue_count}</p>
-            </div>
+              <p className="text-xs font-medium text-indigo-600">View overdue →</p>
+            </Link>
             <div className="rounded-xl bg-white p-4 shadow-sm">
               <p className="text-xs text-slate-500">Streak</p>
               <p className="text-2xl font-bold text-slate-900">🔥 {myProgress ? myProgress.current_streak : '—'}d</p>
@@ -184,8 +185,7 @@ export default function Dashboard() {
 
           {(dash.today_tasks.length > 0 || dash.overdue_tasks.length > 0) && (
             <div className="rounded-xl bg-white p-5 shadow-sm">
-              <h2 className="text-base font-semibold text-slate-900">Today&apos;s tasks</h2>
-              <ul className="mt-2 space-y-2">
+              <h2 className="text-base font-semibold text-slate-900">Today&apos;s tasks</h2>              <ul className="mt-2 space-y-2">
                 {[...dash.overdue_tasks, ...dash.today_tasks].map((t) => (
                   <li key={t.id} className="flex items-center justify-between gap-2 text-sm">
                     <Link to={`/tasks/${t.id}`} className="truncate text-slate-700 hover:text-indigo-600">{t.title}</Link>
@@ -198,6 +198,10 @@ export default function Dashboard() {
                 ))}
               </ul>
             </div>
+          )}
+
+          {dash.today_tasks.length === 0 && dash.overdue_tasks.length === 0 && (
+            <div className="rounded-xl bg-white p-5 text-sm text-slate-500 shadow-sm">Nothing overdue — nice work.</div>
           )}
 
           {categories && (

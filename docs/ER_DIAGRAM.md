@@ -161,6 +161,7 @@ erDiagram
 
 Hot paths are indexed: every `user_id` / `goal_id` / `session_id` / `task_id`
 foreign key, every `status` column, plus composites
-`tasks(goal_id, status)` and `readiness_snapshots(goal_id, date)`.
+`tasks(goal_id, status)`, `tasks(goal_id, due_date)` and
+`readiness_snapshots(goal_id, date)`.
 Ids use `AUTOINCREMENT` on SQLite so deleted row ids are never reused.
 Schema changes ship as Alembic migrations in `backend/alembic/versions/`.
