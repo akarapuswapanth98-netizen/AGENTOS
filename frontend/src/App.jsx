@@ -34,9 +34,9 @@ export default function App() {
             <Route path="/interviews" element={<ProtectedRoute><Interviews /></ProtectedRoute>} />
             <Route path="/interviews/:id" element={<ProtectedRoute><InterviewRunner /></ProtectedRoute>} />
           <Route path="/resume" element={<ProtectedRoute><Resume /></ProtectedRoute>} />
-          <Route path="/review" element={<ProtectedRoute><Review /></ProtectedRoute>} />
-          <Route path="/quiz" element={<ProtectedRoute><Quiz /></ProtectedRoute>} />
-          <Route path="/weekly" element={<ProtectedRoute><Weekly /></ProtectedRoute>} />
+            <Route path="/review" element={<ProtectedRoute><Review /></ProtectedRoute>} />
+            <Route path="/quiz" element={<ProtectedRoute><Quiz /></ProtectedRoute>} />
+            <Route path="/weekly" element={<ProtectedRoute><Weekly /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
