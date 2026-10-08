@@ -112,7 +112,10 @@ export default function GoalDetail() {
     const status = filter === 'overdue' ? 'all' : filter
     api.getGoalTasks(id, status).then((t) => {
       if (!cancelled) setTasks(filter === 'overdue' ? t.filter((x) => x.is_overdue) : t)
-    }).catch(() => {})
+    }).catch((err) => {
+      // Never fail silently: a stale list looks like "no tasks".
+      if (!cancelled) setError(getErrorMessage(err, 'Could not load tasks'))
+    })
     return () => { cancelled = true }
   }, [id, filter, searchActive])
 
