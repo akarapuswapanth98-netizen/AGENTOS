@@ -1,6 +1,21 @@
 # Deploying AGENTOS
 
-## Render (backend + Postgres)
+## Render (backend + Postgres) - one click (free tier)
+
+1. In Render: **New > Blueprint**, select this repo. The `render.yaml` at the
+   repo root creates the `agentos-backend` web service and the `agentos-db`
+   database, both on the free plan.
+2. When asked, fill in `GROQ_API_KEY` (never commit it). Everything else is
+   pre-filled, including the migrations in the start command.
+3. Apply, wait for the build, then open `https://agentos-backend.onrender.com/health`
+   (use your real service URL if you renamed it) - it returns `{"status": "ok"}`.
+4. Send that backend URL back here so the frontend (`VITE_API_URL`) can be
+   pointed at it and redeployed.
+
+Free-tier notes: the web service sleeps after ~15 min idle, so the first
+request after idle takes ~30-60 s; the free Postgres expires after 30 days.
+
+## Render (backend + Postgres) - manual
 
 1. Create a **PostgreSQL** instance; copy its *Internal Database URL*.
 2. Create a **Web Service** from this repo: root `backend/`, build `pip install -r requirements.txt`, start `sh -c "python -m alembic -c alembic.ini upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port $PORT"`.
