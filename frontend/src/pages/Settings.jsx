@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api, getErrorMessage } from '../api/client.js'
 import ErrorBanner from '../components/ErrorBanner.jsx'
@@ -17,6 +17,12 @@ export default function Settings() {
   const [delPw, setDelPw] = useState('')
   const [delConfirm, setDelConfirm] = useState('')
   const [busy, setBusy] = useState(false)
+
+  // The profile loads after this page renders, so fill the field in once it
+  // arrives. Keyed on the name value, so typing is never overwritten.
+  useEffect(() => {
+    if (user?.name) setName(user.name)
+  }, [user?.name])
 
   const inputCls = 'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none'
 
