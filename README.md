@@ -1,58 +1,54 @@
-# AGENTOS — AI career planner that turns a goal into an executable, adaptive plan.
+# AGENTOS — turn a career goal into an executable, adaptive plan
 
 [![CI](https://github.com/akarapuswapanth98-netizen/AGENTOS/actions/workflows/ci.yml/badge.svg)](https://github.com/akarapuswapanth98-netizen/AGENTOS/actions/workflows/ci.yml)
-<!-- Badge now points at akarapuswapanth98-netizen/AGENTOS. -->
 
-## Problem
-
-Career changers drown in generic advice: tutorials with no order, no feedback,
-and no sense of readiness. AGENTOS turns "become a backend developer in 28 days"
-into a week-by-week plan, scores every answer with an AI validator, adds remedial
-work where you struggle, simulates interviews, and tracks a single readiness number.
-
-## Architecture (text)
-
-```
-Browser (React 18 + Vite, :5173)
-   |  Axios + JWT (localStorage), toasts, SVG charts (no chart lib)
-   v
-FastAPI (:8000, CORS for :5173/:3000)
-   +-- routers/auth.py        register / login / me / change-password / delete
-   +-- routers/goals.py       CRUD + replan + PATCH + trace + task listing
-   +-- routers/tasks.py       tutor / submit (validator + remedial) / history
-   +-- routers/interviews.py  5 rounds x 2 questions, answer, complete
-   +-- routers/progress.py    5-category readiness + snapshot history
-   +-- routers/report.py      JSON report card + reportlab PDF
-   +-- routers/dashboard.py   today/overdue tasks, streak, active goal
-        |
-        v
-   Agents (plain functions, NO LangGraph): analyst / planner / tutor /
-   validator / interviewer / reporter via llm.py (anthropic|groq,
-   JSON repair, USE_MOCK_LLM fallback, per-user hourly quota -> 429)
-        v
-   SQLite (SQLAlchemy 2.0): users -> goals -> tasks -> submissions,
-   traces, skill scores, interview sessions/questions, readiness snapshots
-```
+AGENTOS takes "become a backend developer in 28 days" and produces a week-by-week
+plan of tasks, scores every answer with an AI validator, adds remedial work and
+spaced-repetition reviews where you struggle, simulates interviews, and tracks a
+single readiness number — with PDFs to prove it.
 
 ## Features
 
-- JWT auth with per-user ownership on every resource (404 otherwise).
-- Analyst -> Planner pipeline with trace timeline and plan sanity checks.
-- Tutor explanations, strict validator scoring, one-shot remedial tasks.
-- 5-round interview simulator feeding back into skill scores.
-- Readiness engine: 5 weighted categories, streaks, trend snapshots, synthetic-data ML projection.
-- Report card (JSON + PDF), plan re-planning, goal editing, settings, toasts, 30→60/hr AI quota guard.
+- Agents (Analyst, Planner, Validator/Coach): skill-gap analysis, plan generation,
+  strict 0–100 answer scoring, coaching paragraphs.
+- Plans and tasks with due dates, manual status edits, and re-planning that keeps
+  completed work.
+- Answer validation with remedial tasks plus a 5-round interview simulator.
+- Resume analyzer (PDF/txt upload, skill detection, gap analysis, pre-filled goals).
+- Spaced repetition reviews on a simplified Leitner-style 1/3/7/14-day schedule.
+- Practice quizzes: 5 timed multiple-choice questions, server-side grading and clock.
+- Streaks and badges (6 total) with a personal progress page.
+- Due dates and overdue tracking with per-task flags.
+- Task notes (private, never sent to the AI) and task search and filters.
+- Weekly summary with coaching note, plus PDF exports (weekly and career report).
+- Readiness model: five weighted categories plus a synthetic-data ML projection demo.
+- Deployment support: Docker images, `/health` checks, production config guards.
 
-## Tech stack
+## Architecture overview
 
-Backend: Python 3.11+, FastAPI, Uvicorn, SQLite + SQLAlchemy 2.0, Pydantic v2,
-Anthropic SDK + OpenAI SDK (Groq), bcrypt, PyJWT, scikit-learn, reportlab, pytest.
-Frontend: React 18, Vite, Tailwind CSS, React Router v6, Axios. No UI/chart libraries.
+```mermaid
+flowchart LR
+    UI[React 18 + Vite\nTailwind, Router, Axios] --> API[FastAPI\nrouters + JWT auth]
+    API --> Agents[Plain-function agents\nAnalyst Planner Validator\nInterviewer Reporter Coach]
+    Agents --> LLM[LLM provider\nAnthropic or Groq\nJSON mode + repair]
+    Agents --> DB[(SQLite dev\nPostgres prod\nSQLAlchemy 2.0)]
+    API --> DB
+```
+
+## How the agents work
+
+AI parts: question generation, answer scoring, plan drafting, resume skill
+detection, coaching paragraphs, and interview evaluation — every call goes
+through one `call_llm_json` wrapper that demands JSON, retries once on bad
+output, and falls back to deterministic mocks. Plain-code parts: readiness math,
+streaks, spaced-repetition scheduling, quiz grading, PDF building, due-date and
+overdue rules, rate limiting, and all CRUD. Rule of thumb: the LLM proposes,
+plain code disposes — scores are validated, clamped, or rejected, never trusted raw.
 
 ## Local setup
 
 ```bash
-# backend
+# backend — SQLite quick start
 cd backend
 pip install -r requirements.txt
 cp .env.example .env        # fill keys, or keep USE_MOCK_LLM=true for demo
@@ -60,61 +56,44 @@ python -m app.ml.train     # after cloning: builds app/ml/readiness_model.joblib
 USE_MOCK_LLM=true python scripts/seed_demo.py   # demo@agentos.dev / demo12345
 uvicorn app.main:app --reload   # http://127.0.0.1:8000, docs at /docs
 
+# Postgres with Docker
+docker compose --profile postgres up --build -d db
+# in backend/.env (never commit it):
+# DATABASE_URL=postgresql+psycopg2://agentos:agentos@localhost:5432/agentos
+cd backend && python -m alembic -c alembic.ini upgrade head
+
 # frontend (second terminal)
 cd frontend
 npm install
 npm run dev                # http://localhost:5173
 ```
 
-Tests (mock LLM, no network): `cd backend && python -m pytest tests/ -q`.
-Frontend build: `cd frontend && npm run build`.
-
-## Docker setup
+## Running tests
 
 ```bash
-cp backend/.env.example backend/.env   # fill real values (never commit .env)
-docker compose up --build
-# frontend http://localhost:5173, backend http://127.0.0.1:8000
+cd backend && python -m pytest tests/ -q   # mock LLM, no network
+cd frontend && npm run build
 ```
 
-The backend image regenerates the ML model at build time (`python -m app.ml.train`)
-because `*.joblib` is gitignored. SQLite persists in the `agentos-data` volume.
-Docker files are written but untested here (Docker is not installed in this environment).
+## Security notes
 
-### Postgres (optional)
+- Resume text, quiz answers, and interview replies travel inside delimiters with
+  explicit ignore-embedded-instructions orders; validator scores are range-checked.
+- Quiz answers and the quiz timer live server-side; the client never sees answers
+  before submitting.
+- Uploads are type- and size-checked (PDF magic bytes, 2 MB cap) and never saved.
+- Every resource checks ownership (other users' rows read as 404); destructive
+  account deletion requires the current password.
+- Production refuses to start with a missing/short/placeholder JWT secret or a
+  wildcard CORS origin. Health checks expose status only, never details.
 
-SQLite is the default for tests and local dev. For Postgres:
+## Deployment
 
-```bash
-docker compose --profile postgres up --build -d db   # start postgres:16-alpine
-# in backend/.env (never commit it):
-DATABASE_URL=postgresql+psycopg2://agentos:agentos@localhost:5432/agentos
-cd backend && python -m alembic -c alembic.ini upgrade head   # create tables
-uvicorn app.main:app --reload
-```
-
-Schema changes ship as Alembic migrations (`backend/alembic/versions/`);
-`docs/ER_DIAGRAM.md` has the Mermaid ER diagram. Fresh SQLite installs pick up
-AUTOINCREMENT ids automatically; existing SQLite dev DBs predate them, so
-delete the local `.db` file once to recreate it (your data will be gone —
-reseed with `scripts/seed_demo.py`).
-
-## Demo credentials
-
-Email `demo@agentos.dev`, password `demo12345` (via the seed script above):
-one goal, finished plan, scored submissions including a remedial task, a completed
-interview (80), and 14 days of rising snapshots.
-
-## Limitations (honest)
-
-- LLM scoring is approximate: prompts ask for 0-100 integers, but small models
-  sometimes answer on other scales; the validator retries once, then raises.
-- The ML readiness model trains on synthetic data: a plumbing demo, not a
-  validated predictor of real outcomes.
-- SQLite is for demo/small-team use; no connection pooling story.
-- The in-memory AI rate limit resets on restart and is per-process.
+See [docs/DEPLOY.md](docs/DEPLOY.md) (Render + Vercel, checklists, smoke test,
+rollback). Docker images are built in CI but were not run locally here.
 
 ## Future work
 
-PostgreSQL, Alembic migrations, LangGraph orchestration, email reminders,
-production deployment (managed DB, secret store, HTTPS, observability).
+Email reminders and spaced-repetition nudges, richer interviewer voices per role,
+team/mentor views, Postgres-first production hardening, and observability
+(structured logs, metrics, tracing).
