@@ -219,3 +219,48 @@ def generate_quiz_questions(skill: str, user_id: int | None = None) -> list[dict
         logger.warning("Quiz LLM output invalid, using deterministic fallback set")
         return _mock_quiz_questions(skill)
     return valid
+
+
+def _mock_coaching_note(summary: dict) -> str:
+    """Fixed deterministic paragraph mentioning the week's numbers."""
+    avg = summary.get("average_score")
+    return (
+        f"This week you completed {summary.get('tasks_completed', 0)} tasks "
+        f"with an average score of {avg if avg is not None else 'no scores yet'}. "
+        f"Weakest skill: {summary.get('weakest_skill') or 'none identified'}. "
+        f"Reviews finished: {summary.get('reviews_done', 0)}. "
+        f"Active days: {summary.get('active_days', 0)}. "
+        "Keep the streak alive with one small task tomorrow."
+    )
+
+
+def generate_coaching_note(summary: dict, user_id: int | None = None) -> str:
+    """Write one short coaching paragraph from computed numbers ONLY.
+
+    No task notes, titles, or resume text ever enter the prompt. Output is
+    validated (non-empty, capped ~600 chars) with the mock paragraph as the
+    safe fallback, so the summary endpoint never fails on LLM trouble.
+    """
+    logger.info("Coaching note from summary week_tasks=%s", summary.get("tasks_completed"))
+    if USE_MOCK_LLM:
+        return _mock_coaching_note(summary)
+    system = (
+        "You are a concise career coach. Write ONE short paragraph (max 4 sentences) "
+        "encouraging the user based ONLY on the numbers given. Plain text, no markup."
+    )
+    user = (
+        "Weekly numbers (nothing else is known, do not invent details): "
+        f"tasks_completed={summary.get('tasks_completed')}, "
+        f"average_score={summary.get('average_score')}, "
+        f"weakest_skill={summary.get('weakest_skill')}, "
+        f"reviews_done={summary.get('reviews_done')}, "
+        f"active_days={summary.get('active_days')}, "
+        f"current_streak={summary.get('current_streak')}."
+    )
+    data = call_llm_json(system, user, agent="coach",
+                         fallback_context={"summary": summary}, user_id=user_id)
+    text = data.get("note") if isinstance(data, dict) else None
+    if not isinstance(text, str) or not text.strip():
+        logger.warning("Coach output invalid, using fallback paragraph")
+        return _mock_coaching_note(summary)
+    return text.strip()[:600]

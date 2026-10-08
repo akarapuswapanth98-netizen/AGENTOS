@@ -535,6 +535,20 @@ class OverdueResponse(BaseModel):
     count: int
 
 
+class WeeklySummaryResponse(BaseModel):
+    """One week's computed numbers plus a coaching paragraph."""
+
+    week_start: date
+    week_end: date
+    tasks_completed: int
+    average_score: float | None
+    weakest_skill: str | None
+    reviews_done: int
+    active_days: int
+    current_streak: int
+    coaching_note: str
+
+
 class NoteUpdate(BaseModel):
     """Set (trimmed, max 2000 chars) or clear a task note with null."""
 

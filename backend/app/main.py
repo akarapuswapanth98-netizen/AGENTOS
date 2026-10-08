@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import CORS_ORIGINS
 from app.database import Base, engine
-from app.routers import auth, dashboard, goals, interviews, me, progress, quizzes, report, resume, reviews, tasks
+from app.routers import auth, dashboard, goals, interviews, me, progress, quizzes, report, reports, resume, reviews, tasks
 from app.schemas import HealthResponse
 from app.utils.rate_limit import QuotaExceeded
 
@@ -38,6 +38,7 @@ app.include_router(auth.router)
 app.include_router(me.router)
 app.include_router(dashboard.router)
 app.include_router(report.router)
+app.include_router(reports.router)
 app.include_router(resume.router)
 app.include_router(reviews.router)
 app.include_router(quizzes.router)

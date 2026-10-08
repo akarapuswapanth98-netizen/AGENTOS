@@ -59,6 +59,11 @@ export const api = {
   answerQuiz: (id, answers) => apiClient.post(`/quizzes/${id}/submit`, { answers }).then((r) => r.data),
   getQuizHistory: () => apiClient.get('/quizzes/history').then((r) => r.data),
   getMyProgress: () => apiClient.get('/me/progress').then((r) => r.data),
+  getWeeklySummary: (week_offset = 0) => apiClient.get('/me/weekly-summary', { params: { week_offset } }).then((r) => r.data),
+  downloadWeeklyPdf: (week_offset = 0) =>
+    apiClient.get('/me/weekly-summary/pdf', { params: { week_offset }, responseType: 'blob' }).then((r) => r.data),
+  downloadCareerPdf: (goal_id) =>
+    apiClient.get('/reports/career/pdf', { params: goal_id ? { goal_id } : {}, responseType: 'blob' }).then((r) => r.data),
   getQuiz: (id) => apiClient.get(`/quizzes/${id}`).then((r) => r.data),
   // --- resume ---
   analyzeResume: (file, goalId) => {

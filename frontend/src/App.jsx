@@ -16,6 +16,7 @@ import Resume from './pages/Resume.jsx'
 import Review from './pages/Review.jsx'
 import Settings from './pages/Settings.jsx'
 import TaskDetail from './pages/TaskDetail.jsx'
+import Weekly from './pages/Weekly.jsx'
 
 // Public auth pages + protected app pages. Layout wraps everything.
 export default function App() {
@@ -35,6 +36,7 @@ export default function App() {
           <Route path="/resume" element={<ProtectedRoute><Resume /></ProtectedRoute>} />
           <Route path="/review" element={<ProtectedRoute><Review /></ProtectedRoute>} />
           <Route path="/quiz" element={<ProtectedRoute><Quiz /></ProtectedRoute>} />
+          <Route path="/weekly" element={<ProtectedRoute><Weekly /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
