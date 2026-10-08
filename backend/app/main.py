@@ -2,12 +2,14 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 
-from app.config import CORS_ORIGINS
-from app.database import Base, engine
+from app.config import CORS_ORIGINS, validate_production_config
+from app.database import Base, engine, get_db
 from app.routers import auth, dashboard, goals, interviews, me, progress, quizzes, report, reports, resume, reviews, tasks
 from app.schemas import HealthResponse
 from app.utils.rate_limit import QuotaExceeded
@@ -18,7 +20,8 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):  # noqa: ANN201, ANN001
-    """Create tables on startup."""
+    """Validate production config, then create tables on startup."""
+    validate_production_config()
     logger.info("Creating tables (if needed)")
     Base.metadata.create_all(bind=engine)
     yield
@@ -55,6 +58,12 @@ def quota_handler(_request: Request, exc: QuotaExceeded) -> JSONResponse:
 
 
 @app.get("/health", response_model=HealthResponse, tags=["health"])
-def health() -> HealthResponse:
-    """Liveness probe (public, no auth)."""
-    return HealthResponse(status="ok")
+def health(db: Session = Depends(get_db)):
+    """Liveness probe (public, no auth). 503 + degraded when the DB is down."""
+    try:
+        db.execute(text("SELECT 1"))
+        return HealthResponse(status="ok")
+    except Exception:  # noqa: BLE001 - details must never leak into the body
+        logger.warning("Health check: database unreachable")
+        return JSONResponse(status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                            content={"status": "degraded"})

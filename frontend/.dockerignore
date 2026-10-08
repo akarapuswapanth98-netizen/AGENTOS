@@ -2,3 +2,5 @@ node_modules
 dist
 .env
 .env.*
+.git
+__pycache__
