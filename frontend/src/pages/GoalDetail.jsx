@@ -130,6 +130,13 @@ export default function GoalDetail() {
     return () => clearTimeout(timer)
   }, [id, searchQ, searchSkill, searchOverdue, searchActive])
 
+  // Describe what is actually filtered, so an empty search box never shows "for ''".
+  const filterLabel = [
+    searchQ.trim() ? `“${searchQ.trim()}”` : null,
+    searchSkill || null,
+    searchOverdue || (filter === 'overdue' ? 'overdue only' : null),
+  ].filter(Boolean).join(' · ')
+
   const byWeek = useMemo(() => {
     const groups = {}
     for (const t of tasks) {
@@ -227,7 +234,7 @@ export default function GoalDetail() {
         </div>
         {searching && <p className="mt-2 text-xs text-slate-400">Searching…</p>}
         {searchActive && !searching && (
-          <p className="mt-2 text-xs text-slate-500">{searchTotal} match{searchTotal === 1 ? '' : 'es'} for “{searchQ}”</p>
+          <p className="mt-2 text-xs text-slate-500">{searchTotal} match{searchTotal === 1 ? '' : 'es'}{filterLabel ? ` for ${filterLabel}` : ''}</p>
         )}
       </div>
 
