@@ -57,6 +57,10 @@ export default function Review() {
 
   async function handleAnswer(e) {
     e.preventDefault()
+    if (!answer.trim()) {          // never score an empty answer
+      setError('Write an answer before submitting')
+      return
+    }
     setSending(true)
     setError('')
     try {
@@ -106,9 +110,12 @@ export default function Review() {
                 <textarea value={answer} onChange={(e) => setAnswer(e.target.value)} rows={4}
                   placeholder="Your answer with an example…"
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none" />
-                <button disabled={sending} className="mt-3 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60">
+                <button disabled={sending || !answer.trim()} className="mt-3 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60">
                   {sending ? 'Scoring…' : 'Submit answer'}
                 </button>
+                {!answer.trim() && (
+                  <p className="mt-2 text-xs text-slate-400">Write an answer first — an empty answer is not submitted.</p>
+                )}
               </form>
             </>
           ) : null}

@@ -106,6 +106,10 @@ export default function TaskDetail() {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    if (!answer.trim()) {          // never score an empty answer
+      setError('Write an answer before submitting')
+      return
+    }
     setSubmitting(true)
     setError('')
     try {
@@ -200,10 +204,13 @@ export default function TaskDetail() {
         <textarea value={answer} onChange={(e) => setAnswer(e.target.value)} rows={6}
           placeholder="Explain the concept with a concrete example…"
           className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none" />
-        <button type="submit" disabled={submitting}
+        <button type="submit" disabled={submitting || !answer.trim()}
           className="mt-3 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60">
           {submitting ? 'Evaluating…' : 'Submit answer'}
         </button>
+        {!answer.trim() && (
+          <p className="mt-2 text-xs text-slate-400">Write an answer first — an empty answer is not submitted.</p>
+        )}
       </form>
 
       {result && <ScoreResult result={result} />}
