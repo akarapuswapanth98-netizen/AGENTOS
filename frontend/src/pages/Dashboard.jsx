@@ -70,8 +70,10 @@ export default function Dashboard() {
   const [error, setError] = useState('')
   const [deletingId, setDeletingId] = useState(null)
 
-  const load = useCallback(async () => {
-    setLoading(true)
+  // quiet=true refreshes in the background and keeps what is on screen,
+    // so actions like deleting a goal do not flash the loading skeleton.
+  const load = useCallback(async (quiet = false) => {
+    if (!quiet) setLoading(true)
     setError('')
     try {
       const [goalList, dashboard, due, mine] = await Promise.all(
@@ -119,7 +121,7 @@ export default function Dashboard() {
       await api.deleteGoal(id)
       setGoals((g) => g.filter((x) => x.id !== id))
       toast.success('Goal deleted')
-      load()
+      load(true)
     } catch (err) {
       const msg = getErrorMessage(err, 'Could not delete goal')
       setError(msg)
@@ -136,7 +138,7 @@ export default function Dashboard() {
         <p className="text-sm text-slate-500">Here is where your career prep stands today.</p>
       </div>
 
-      <ErrorBanner message={error} onRetry={load} />
+      <ErrorBanner message={error} onRetry={() => load()} />
 
       {loading ? <Loader label="Loading dashboard…" /> : dash && (
         <>

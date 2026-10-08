@@ -19,8 +19,10 @@ export default function Review() {
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
 
-  const load = useCallback(async () => {
-    setLoading(true)
+  // quiet=true refreshes in the background and keeps the current list visible,
+  // so answering an item does not flash the loading skeleton.
+  const load = useCallback(async (quiet = false) => {
+    if (!quiet) setLoading(true)
     setError('')
     try {
       const due = await api.getDueReviews()
@@ -62,7 +64,7 @@ export default function Review() {
       setResult(res)
       toast.success(`Scored ${res.score} / 100 — next review ${res.next_due_date}`)
       for (const b of res.newly_earned_badges || []) toast.success(`Badge earned: ${b}`)
-      load()
+      load(true)
     } catch (err) {
       const msg = getErrorMessage(err, 'Could not submit answer')
       setError(msg)
@@ -78,7 +80,7 @@ export default function Review() {
         <h1 className="text-2xl font-bold text-slate-900">Review today</h1>
         <p className="text-sm text-slate-500">Spaced repetition: pass at 70+ to wait longer, below 70 restarts tomorrow.</p>
       </div>
-      <ErrorBanner message={error} onRetry={load} />
+      <ErrorBanner message={error} onRetry={() => load()} />
 
       {loading ? <Skeleton rows={3} /> : items.length === 0 ? (
         <EmptyState title="Nothing due today" hint="New reviews appear here after low task scores." />
