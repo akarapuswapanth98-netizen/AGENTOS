@@ -1,16 +1,23 @@
 import axios from 'axios'
 
 // Base URL comes from VITE_API_URL, falls back to the local FastAPI server.
+// No global Content-Type: axios sets application/json for plain objects and
+// we must NOT set it for FormData (see the interceptor below).
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000',
   timeout: 120000,
-  headers: { 'Content-Type': 'application/json' },
 })
 
 // Attach the stored JWT to every request.
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('agentos_token')
   if (token) config.headers.Authorization = `Bearer ${token}`
+  // File uploads (resume) send FormData. A Content-Type of application/json here
+  // makes axios JSON-stringify the form, so the backend never sees the file part.
+  // Dropping the header lets the browser add the multipart boundary itself.
+  if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+    config.headers.delete('Content-Type')
+  }
   return config
 })
 
