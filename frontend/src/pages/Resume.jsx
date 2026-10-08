@@ -1,22 +1,42 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api, getErrorMessage } from '../api/client.js'
 import ErrorBanner from '../components/ErrorBanner.jsx'
 import Loader from '../components/Loader.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 
+// Turn backend status codes into a message the user can act on.
+function friendlyUploadError(err) {
+  const status = err?.response?.status
+  if (status === 413) return 'That file is larger than 2 MB. Please upload a smaller file.'
+  if (status === 415) return 'That file type is not supported. Please choose a .pdf or .txt file.'
+  if (status === 400) return 'That file appears to be empty or unreadable.'
+  if (status === 422) return 'We could not read that file. Please choose a .pdf or .txt file.'
+  return getErrorMessage(err, 'Could not analyze resume')
+}
+
 // Resume upload: picker, progress, results, and handoff to goal creation.
 export default function Resume() {
   const navigate = useNavigate()
   const toast = useToast()
+  const inputRef = useRef(null)
   const [file, setFile] = useState(null)
   const [result, setResult] = useState(null)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
 
+  // Clear the picker so the next upload starts from an empty input.
+  function resetFile() {
+    setFile(null)
+    if (inputRef.current) inputRef.current.value = ''
+  }
+
   async function handleUpload(e) {
     e.preventDefault()
-    if (!file) return
+    if (!file) {
+      setError('Choose a .pdf or .txt file first')
+      return
+    }
     setUploading(true)
     setError('')
     try {
@@ -24,11 +44,12 @@ export default function Resume() {
       setResult(res)
       toast.success(`Resume scored ${res.score} / 100`)
     } catch (err) {
-      const msg = getErrorMessage(err, 'Could not analyze resume')
+      const msg = friendlyUploadError(err)
       setError(msg)
       toast.error(msg)
     } finally {
       setUploading(false)
+      resetFile()
     }
   }
 
@@ -48,7 +69,7 @@ export default function Resume() {
       <form onSubmit={handleUpload} className="flex flex-wrap items-end gap-3 rounded-xl bg-white p-5 shadow-sm">
         <div className="min-w-0 flex-1">
           <label className="mb-1 block text-xs font-medium text-slate-600">Resume file</label>
-          <input type="file" accept=".pdf,.txt" onChange={(e) => setFile(e.target.files?.[0] || null)}
+          <input ref={inputRef} type="file" accept=".pdf,.txt" onChange={(e) => setFile(e.target.files?.[0] || null)}
             className="w-full text-sm text-slate-600" />
         </div>
         <button disabled={uploading || !file}

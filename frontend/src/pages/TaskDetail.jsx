@@ -23,6 +23,7 @@ export default function TaskDetail() {
   const [dueInput, setDueInput] = useState('')
   const [noteInput, setNoteInput] = useState('')
   const [noteState, setNoteState] = useState('idle')  // idle | saving | saved | error
+  const [savingDue, setSavingDue] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -41,7 +42,10 @@ export default function TaskDetail() {
     }
   }, [id])
 
-  async function saveDueDate(value) {    setError('')
+  async function saveDueDate(value) {
+    if (savingDue) return  // ignore extra clicks until the save returns
+    setSavingDue(true)
+    setError('')
     try {
       const updated = await api.updateTaskDueDate(id, value || null)
       setTask(updated)
@@ -51,6 +55,8 @@ export default function TaskDetail() {
       const msg = getErrorMessage(err, 'Could not save due date')
       setError(msg)
       toast.error(msg)
+    } finally {
+      setSavingDue(false)
     }
   }
 
@@ -100,6 +106,10 @@ export default function TaskDetail() {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    if (!answer.trim()) {          // never score an empty answer
+      setError('Write an answer before submitting')
+      return
+    }
     setSubmitting(true)
     setError('')
     try {
@@ -141,9 +151,13 @@ export default function TaskDetail() {
           <label className="text-xs text-slate-500">Due date{task.due_date ? ` (now ${new Date(task.due_date).toLocaleDateString()})` : ' (none)'}</label>
           <input type="date" value={dueInput} onChange={(e) => setDueInput(e.target.value)}
             className="rounded-lg border border-slate-300 px-2 py-1 text-xs focus:border-indigo-500 focus:outline-none" />
-          <button className="rounded-lg bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-200">Save</button>
+          <button disabled={savingDue}
+            className="rounded-lg bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-200 disabled:opacity-60">
+            {savingDue ? 'Saving…' : 'Save'}
+          </button>
           {task.due_date && (
-            <button type="button" onClick={clearDueDate} className="rounded-lg px-3 py-1 text-xs font-semibold text-red-600 hover:bg-red-50">Clear</button>
+            <button type="button" onClick={clearDueDate} disabled={savingDue}
+              className="rounded-lg px-3 py-1 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-60">Clear</button>
           )}
         </form>
         <div className="mt-3">
@@ -190,10 +204,13 @@ export default function TaskDetail() {
         <textarea value={answer} onChange={(e) => setAnswer(e.target.value)} rows={6}
           placeholder="Explain the concept with a concrete example…"
           className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none" />
-        <button type="submit" disabled={submitting}
+        <button type="submit" disabled={submitting || !answer.trim()}
           className="mt-3 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60">
           {submitting ? 'Evaluating…' : 'Submit answer'}
         </button>
+        {!answer.trim() && (
+          <p className="mt-2 text-xs text-slate-400">Write an answer first — an empty answer is not submitted.</p>
+        )}
       </form>
 
       {result && <ScoreResult result={result} />}

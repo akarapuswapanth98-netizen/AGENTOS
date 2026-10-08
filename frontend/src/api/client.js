@@ -1,16 +1,29 @@
 import axios from 'axios'
 
 // Base URL comes from VITE_API_URL, falls back to the local FastAPI server.
+// No global Content-Type: axios sets application/json for plain objects and
+// we must NOT set it for FormData (see the interceptor below).
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000',
   timeout: 120000,
-  headers: { 'Content-Type': 'application/json' },
 })
 
 // Attach the stored JWT to every request.
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('agentos_token')
   if (token) config.headers.Authorization = `Bearer ${token}`
+  // File uploads (resume) send FormData, so no Content-Type may be set here:
+  //  - application/json makes axios JSON-stringify the form, so the backend
+  //    never sees the file part;
+  //  - axios 1.20.0 re-adds application/x-www-form-urlencoded to every
+  //    post/put/patch whose Content-Type is missing (dispatchRequest), and the
+  //    browser then sends that instead of the multipart boundary.
+  // setContentType(false) marks the header as "remove me": axios keeps the
+  // marker, never overwrites it, and drops it before calling setRequestHeader,
+  // so the browser generates multipart/form-data; boundary=... itself.
+  if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+    config.headers.setContentType(false)
+  }
   return config
 })
 
@@ -64,15 +77,14 @@ export const api = {
     apiClient.get('/me/weekly-summary/pdf', { params: { week_offset }, responseType: 'blob' }).then((r) => r.data),
   downloadCareerPdf: (goal_id) =>
     apiClient.get('/reports/career/pdf', { params: goal_id ? { goal_id } : {}, responseType: 'blob' }).then((r) => r.data),
-  getQuiz: (id) => apiClient.get(`/quizzes/${id}`).then((r) => r.data),
   // --- resume ---
+  // goal_id is only attached when a goal was actually selected.
   analyzeResume: (file, goalId) => {
     const form = new FormData()
     form.append('file', file)
     if (goalId) form.append('goal_id', String(goalId))
     return apiClient.post('/resume/analyze', form).then((r) => r.data)
   },
-  getLatestResume: () => apiClient.get('/resume/latest').then((r) => r.data),
   // --- reviews ---
   getDueReviews: () => apiClient.get('/reviews/due').then((r) => r.data),
   startReview: (itemId) => apiClient.post(`/reviews/${itemId}/start`).then((r) => r.data),
@@ -81,7 +93,6 @@ export const api = {
   // --- tasks ---
   searchTasks: (params) => apiClient.get('/tasks/search', { params }).then((r) => r.data),
   getTask: (id) => apiClient.get(`/tasks/${id}`).then((r) => r.data),
-  updateTaskStatus: (id, status) => apiClient.patch(`/tasks/${id}/status`, { status }).then((r) => r.data),
   updateTaskDueDate: (id, due_date) => apiClient.patch(`/tasks/${id}/due-date`, { due_date }).then((r) => r.data),
   updateTaskNote: (id, note) => apiClient.put(`/tasks/${id}/note`, { note }).then((r) => r.data),
   getTutor: (id) => apiClient.post(`/tasks/${id}/tutor`).then((r) => r.data),

@@ -70,8 +70,10 @@ export default function Dashboard() {
   const [error, setError] = useState('')
   const [deletingId, setDeletingId] = useState(null)
 
-  const load = useCallback(async () => {
-    setLoading(true)
+  // quiet=true refreshes in the background and keeps what is on screen,
+    // so actions like deleting a goal do not flash the loading skeleton.
+  const load = useCallback(async (quiet = false) => {
+    if (!quiet) setLoading(true)
     setError('')
     try {
       const [goalList, dashboard, due, mine] = await Promise.all(
@@ -119,7 +121,7 @@ export default function Dashboard() {
       await api.deleteGoal(id)
       setGoals((g) => g.filter((x) => x.id !== id))
       toast.success('Goal deleted')
-      load()
+      load(true)
     } catch (err) {
       const msg = getErrorMessage(err, 'Could not delete goal')
       setError(msg)
@@ -136,7 +138,7 @@ export default function Dashboard() {
         <p className="text-sm text-slate-500">Here is where your career prep stands today.</p>
       </div>
 
-      <ErrorBanner message={error} onRetry={load} />
+      <ErrorBanner message={error} onRetry={() => load()} />
 
       {loading ? <Loader label="Loading dashboard…" /> : dash && (
         <>
@@ -155,11 +157,27 @@ export default function Dashboard() {
               <p className="text-xs text-slate-500">Due today</p>
               <p className="text-2xl font-bold text-slate-900">{dash.today_tasks.length}</p>
             </div>
-            <Link to={dash.overdue_tasks.length ? `/goals/${dash.overdue_tasks[0].goal_id}?filter=overdue` : '/'} className="block rounded-xl bg-white p-4 shadow-sm transition hover:shadow-md">
-              <p className="text-xs text-slate-500">Overdue {dash.overdue_count > 0 && <span className="ml-1 rounded-full bg-red-100 px-2 py-0.5 font-semibold text-red-700">{dash.overdue_count}</span>}</p>
-              <p className="text-2xl font-bold text-slate-900">{dash.overdue_count}</p>
-              <p className="text-xs font-medium text-indigo-600">View overdue →</p>
-            </Link>
+            {(() => {
+              // Only link somewhere useful: a goal's overdue list when there is
+              // one, otherwise a plain card (never a link back to this page).
+              const overdueBody = (
+                <>
+                  <p className="text-xs text-slate-500">Overdue {dash.overdue_count > 0 && <span className="ml-1 rounded-full bg-red-100 px-2 py-0.5 font-semibold text-red-700">{dash.overdue_count}</span>}</p>
+                  <p className="text-2xl font-bold text-slate-900">{dash.overdue_count}</p>
+                  {dash.overdue_tasks.length > 0
+                    ? <p className="text-xs font-medium text-indigo-600">View overdue →</p>
+                    : <p className="text-xs text-slate-400">Nothing overdue</p>}
+                </>
+              )
+              return dash.overdue_tasks.length > 0 ? (
+                <Link to={`/goals/${dash.overdue_tasks[0].goal_id}?filter=overdue`}
+                  className="block rounded-xl bg-white p-4 shadow-sm transition hover:shadow-md">
+                  {overdueBody}
+                </Link>
+              ) : (
+                <div className="rounded-xl bg-white p-4 shadow-sm">{overdueBody}</div>
+              )
+            })()}
             <div className="rounded-xl bg-white p-4 shadow-sm">
               <p className="text-xs text-slate-500">Streak</p>
               <p className="text-2xl font-bold text-slate-900">🔥 {myProgress ? myProgress.current_streak : '—'}d</p>

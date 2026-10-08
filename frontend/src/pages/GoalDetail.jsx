@@ -36,6 +36,7 @@ export default function GoalDetail() {
   const [error, setError] = useState('')
   const [replanning, setReplanning] = useState(false)
   const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [editTitle, setEditTitle] = useState('')
   const [editRole, setEditRole] = useState('')
   const [editDays, setEditDays] = useState(28)
@@ -87,6 +88,8 @@ export default function GoalDetail() {
 
   async function handleEdit(e) {
     e.preventDefault()
+    if (saving) return           // ignore extra clicks until the save returns
+    setSaving(true)
     setError('')
     try {
       const updated = await api.updateGoal(id, {
@@ -101,6 +104,8 @@ export default function GoalDetail() {
       const msg = getErrorMessage(err, 'Could not update goal')
       setError(msg)
       toast.error(msg)
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -112,9 +117,17 @@ export default function GoalDetail() {
     const status = filter === 'overdue' ? 'all' : filter
     api.getGoalTasks(id, status).then((t) => {
       if (!cancelled) setTasks(filter === 'overdue' ? t.filter((x) => x.is_overdue) : t)
-    }).catch(() => {})
+    }).catch((err) => {
+      // Never fail silently: a stale list looks like "no tasks".
+      if (!cancelled) setError(getErrorMessage(err, 'Could not load tasks'))
+    })
     return () => { cancelled = true }
   }, [id, filter, searchActive])
+
+  // Status chips keep working while a search is active: "overdue" is its own
+  // flag, the other statuses are sent to the server as ?status=.
+  const statusParam = filter !== 'all' && filter !== 'overdue' ? filter : undefined
+  const overdueParam = filter === 'overdue' || searchOverdue ? true : undefined
 
   // Debounced server search scoped to this goal (~300 ms).
   useEffect(() => {
@@ -122,13 +135,20 @@ export default function GoalDetail() {
     setSearching(true)
     const timer = setTimeout(() => {
       api.searchTasks({ q: searchQ.trim() || undefined, skill: searchSkill || undefined,
-                        overdue: searchOverdue || undefined, goal_id: id })
+                        overdue: overdueParam, status: statusParam, goal_id: id })
         .then((res) => { setTasks(res.items); setSearchTotal(res.total) })
         .catch((err) => setError(getErrorMessage(err, 'Search failed')))
         .finally(() => setSearching(false))
     }, 300)
     return () => clearTimeout(timer)
-  }, [id, searchQ, searchSkill, searchOverdue, searchActive])
+  }, [id, searchQ, searchSkill, searchOverdue, searchActive, statusParam, overdueParam])
+
+  // Describe what is actually filtered, so an empty search box never shows "for ''".
+  const filterLabel = [
+    searchQ.trim() ? `“${searchQ.trim()}”` : null,
+    searchSkill || null,
+    searchOverdue || (filter === 'overdue' ? 'overdue only' : null),
+  ].filter(Boolean).join(' · ')
 
   const byWeek = useMemo(() => {
     const groups = {}
@@ -203,8 +223,9 @@ export default function GoalDetail() {
             <input type="number" min="1" max="365" value={editDays} onChange={(e) => setEditDays(e.target.value)} required
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none" />
           </div>
-          <button className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
-            Save changes
+          <button disabled={saving}
+            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60">
+            {saving ? 'Saving...' : 'Save changes'}
           </button>
         </form>
       )}
@@ -227,7 +248,10 @@ export default function GoalDetail() {
         </div>
         {searching && <p className="mt-2 text-xs text-slate-400">Searching…</p>}
         {searchActive && !searching && (
-          <p className="mt-2 text-xs text-slate-500">{searchTotal} match{searchTotal === 1 ? '' : 'es'} for “{searchQ}”</p>
+          <p className="mt-2 text-xs text-slate-500">{searchTotal} match{searchTotal === 1 ? '' : 'es'}{filterLabel ? ` for ${filterLabel}` : ''}</p>
+        )}
+        {searchActive && !searching && statusParam === 'completed' && overdueParam && (
+          <p className="mt-1 text-xs text-slate-400">No overdue tasks are completed - pick another status chip.</p>
         )}
       </div>
 

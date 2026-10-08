@@ -43,6 +43,10 @@ export default function InterviewRunner() {
 
   async function handleAnswer(e) {
     e.preventDefault()
+    if (!answer.trim()) {          // never score an empty answer
+      setError('Write an answer before submitting')
+      return
+    }
     setSending(true)
     setError('')
     try {
@@ -137,9 +141,12 @@ export default function InterviewRunner() {
               placeholder="Answer with a concrete example…"
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none" />
             <div className="mt-3 flex gap-2">
-              <button disabled={sending} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60">
+              <button disabled={sending || !answer.trim()} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60">
                 {sending ? 'Evaluating…' : 'Submit answer'}
               </button>
+              {!answer.trim() && (
+                <p className="mt-2 text-xs text-slate-400">Write an answer first — an empty answer is not submitted.</p>
+              )}
               {index < questions.length - 1 && (
                 <button type="button" onClick={next} className="rounded-lg bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-200">
                   Skip for now →

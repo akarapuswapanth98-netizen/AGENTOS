@@ -157,14 +157,14 @@ def get_trace(
 @router.get("/{goal_id}/tasks", response_model=list[TaskResponse])
 def list_goal_tasks(
     goal_id: int,
-    status: str | None = Query(default=None, description="Filter by pending|in_progress|completed"),
+    status: str | None = Query(default=None, description="Filter by all|pending|in_progress|completed"),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> list[TaskResponse]:
-    """List tasks for a goal, optionally filtered by status."""
+    """List tasks for a goal, optionally filtered by status ("all" means no filter)."""
     get_owned_goal(db, goal_id, user.id)
     q = db.query(Task).filter(Task.goal_id == goal_id)
-    if status is not None:
+    if status is not None and status != "all":
         if status not in ("pending", "in_progress", "completed"):
             raise HTTPException(status_code=422, detail="Invalid status filter")
         q = q.filter(Task.status == status)
