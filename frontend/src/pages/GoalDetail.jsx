@@ -116,19 +116,24 @@ export default function GoalDetail() {
     return () => { cancelled = true }
   }, [id, filter, searchActive])
 
+  // Status chips keep working while a search is active: "overdue" is its own
+  // flag, the other statuses are sent to the server as ?status=.
+  const statusParam = filter !== 'all' && filter !== 'overdue' ? filter : undefined
+  const overdueParam = filter === 'overdue' || searchOverdue ? true : undefined
+
   // Debounced server search scoped to this goal (~300 ms).
   useEffect(() => {
     if (!searchActive) return
     setSearching(true)
     const timer = setTimeout(() => {
       api.searchTasks({ q: searchQ.trim() || undefined, skill: searchSkill || undefined,
-                        overdue: searchOverdue || undefined, goal_id: id })
+                        overdue: overdueParam, status: statusParam, goal_id: id })
         .then((res) => { setTasks(res.items); setSearchTotal(res.total) })
         .catch((err) => setError(getErrorMessage(err, 'Search failed')))
         .finally(() => setSearching(false))
     }, 300)
     return () => clearTimeout(timer)
-  }, [id, searchQ, searchSkill, searchOverdue, searchActive])
+  }, [id, searchQ, searchSkill, searchOverdue, searchActive, statusParam, overdueParam])
 
   // Describe what is actually filtered, so an empty search box never shows "for ''".
   const filterLabel = [
