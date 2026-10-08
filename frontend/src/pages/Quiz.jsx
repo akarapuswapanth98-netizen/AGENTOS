@@ -34,6 +34,9 @@ export default function Quiz() {
   // Mutable ref so the timer callback always sees the latest picks.
   const answersRef = useRef(answers)
   answersRef.current = answers
+  // Ref guard: two fast clicks reach doSubmit before the button re-renders as
+  // disabled, which used to send two submits (the second 409s).
+  const sendingRef = useRef(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -58,6 +61,8 @@ export default function Quiz() {
   }
 
   async function doSubmit(quizId, picked, auto) {
+    if (sendingRef.current) return  // already grading: ignore the extra click
+    sendingRef.current = true
     setSending(true)
     setError('')
     try {
@@ -71,6 +76,7 @@ export default function Quiz() {
       setError(msg)
       toast.error(msg)  // answers stay in state: nothing is lost
     } finally {
+      sendingRef.current = false
       setSending(false)
     }
   }
