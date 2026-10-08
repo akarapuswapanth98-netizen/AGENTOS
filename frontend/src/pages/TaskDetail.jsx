@@ -57,6 +57,7 @@ export default function TaskDetail() {
       const res = await api.submitAnswer(id, answer)
       setResult(res)
       toast.success(`Scored ${res.score} / 100`)
+      for (const b of res.newly_earned_badges || []) toast.success(`Badge earned: ${b}`)
       // Refresh task status/score and submission history.
       const [t, h] = await Promise.all([api.getTask(id), api.getSubmissions(id)])
       setTask(t)

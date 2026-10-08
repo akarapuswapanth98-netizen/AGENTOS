@@ -12,6 +12,8 @@ erDiagram
     users ||--o{ resume_analyses : analyzes
     users ||--o{ review_items : reviews
     users ||--o{ quiz_attempts : quizzes
+    users ||--o{ activity_days : streaks
+    users ||--o{ user_badges : earns
     goals ||--o{ tasks : has
     goals ||--o{ agent_traces : logs
     goals ||--o{ skill_scores : tracks
@@ -142,6 +144,18 @@ erDiagram
         int elapsed_seconds
         bool timed_out
         datetime created_at
+    }
+    activity_days {
+        int id PK
+        int user_id FK
+        date day
+        datetime created_at
+    }
+    user_badges {
+        int id PK
+        int user_id FK
+        string badge
+        datetime awarded_at
     }
 ```
 

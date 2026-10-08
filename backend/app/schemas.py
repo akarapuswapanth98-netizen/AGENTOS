@@ -114,6 +114,7 @@ class SubmitResponse(BaseModel):
     task_status: str
     remedial_task: TaskResponse | None = None
     message: str
+    newly_earned_badges: list[str] = []
 
 
 class SubmissionResponse(BaseModel):
@@ -394,6 +395,7 @@ class ReviewAnswerResponse(BaseModel):
     feedback: dict[str, Any]
     stage: int
     next_due_date: date
+    newly_earned_badges: list[str] = []
 
 
 class QuizStartRequest(BaseModel):
@@ -469,7 +471,6 @@ class QuizHistoryItem(BaseModel):
 
 class QuizAttemptResponse(BaseModel):
     """One attempt; answers included only after submission."""
-
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -483,3 +484,26 @@ class QuizAttemptResponse(BaseModel):
     submitted_at: datetime | None = None
     elapsed_seconds: int | None = None
     timed_out: bool
+
+
+class EarnedBadge(BaseModel):
+    """One earned badge with its award date."""
+
+    badge: str
+    awarded_at: datetime
+
+
+class LockedBadge(BaseModel):
+    """One unearned badge with its how-to-earn hint."""
+
+    badge: str
+    hint: str
+
+
+class MeProgressResponse(BaseModel):
+    """Streaks plus earned and locked badges for the current user."""
+
+    current_streak: int
+    longest_streak: int
+    earned: list[EarnedBadge]
+    locked: list[LockedBadge]

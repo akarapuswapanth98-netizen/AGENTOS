@@ -64,6 +64,7 @@ export default function Dashboard() {
   const [categories, setCategories] = useState(null)
   const [history, setHistory] = useState([])
   const [dueCount, setDueCount] = useState(null)
+  const [myProgress, setMyProgress] = useState(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -73,10 +74,12 @@ export default function Dashboard() {
     setLoading(true)
     setError('')
     try {
-      const [goalList, dashboard, due] = await Promise.all([api.listGoals(), api.getDashboard(), api.getDueReviews()])
+      const [goalList, dashboard, due, mine] = await Promise.all(
+        [api.listGoals(), api.getDashboard(), api.getDueReviews(), api.getMyProgress()])
       setGoals(goalList)
       setDash(dashboard)
       setDueCount(due.count)
+      setMyProgress(mine)
       if (dashboard.active_goal) {
         const [prog, hist] = await Promise.all([
           api.getProgress(dashboard.active_goal.id),
@@ -158,10 +161,26 @@ export default function Dashboard() {
             </div>
             <div className="rounded-xl bg-white p-4 shadow-sm">
               <p className="text-xs text-slate-500">Streak</p>
-              <p className="text-2xl font-bold text-slate-900">🔥 {dash.streak_days}d</p>
+              <p className="text-2xl font-bold text-slate-900">🔥 {myProgress ? myProgress.current_streak : '—'}d</p>
               <p className="text-xs text-slate-400">{dash.completed_this_week} done this week</p>
             </div>
           </div>
+
+          {myProgress && (
+            <div className="rounded-xl bg-white p-5 shadow-sm">
+              <h2 className="text-base font-semibold text-slate-900">Badges</h2>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {myProgress.earned.map((b) => (
+                  <span key={b.badge} title={`Earned ${new Date(b.awarded_at).toLocaleDateString()}`}
+                    className="rounded-full bg-indigo-600 px-3 py-1 text-xs font-semibold text-white">🏅 {b.badge}</span>
+                ))}
+                {myProgress.locked.map((b) => (
+                  <span key={b.badge} title={b.hint}
+                    className="cursor-help rounded-full bg-slate-200 px-3 py-1 text-xs font-medium text-slate-500">🔒 {b.badge}</span>
+                ))}
+              </div>
+            </div>
+          )}
 
           {(dash.today_tasks.length > 0 || dash.overdue_tasks.length > 0) && (
             <div className="rounded-xl bg-white p-5 shadow-sm">

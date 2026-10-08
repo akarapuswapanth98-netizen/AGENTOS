@@ -61,6 +61,7 @@ export default function Review() {
       const res = await api.answerReview(selected.id, question, answer)
       setResult(res)
       toast.success(`Scored ${res.score} / 100 — next review ${res.next_due_date}`)
+      for (const b of res.newly_earned_badges || []) toast.success(`Badge earned: ${b}`)
       load()
     } catch (err) {
       const msg = getErrorMessage(err, 'Could not submit answer')

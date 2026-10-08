@@ -16,6 +16,7 @@ from app.schemas import (
     ReviewItemResponse,
     ReviewQuestionResponse,
 )
+from app.utils.badges import check_and_award_badges, record_activity_day
 from app.utils.rate_limit import QuotaExceeded
 from app.utils.review_schedule import next_state
 
@@ -89,6 +90,8 @@ def answer_review(
     db.commit()
     db.refresh(item)
     logger.info("Review item_id=%s scored %s -> stage %s due %s", item_id, score, stage, due)
+    record_activity_day(db, user.id)
+    newly_earned = check_and_award_badges(db, user.id)
     return ReviewAnswerResponse(
         item_id=item.id,
         score=score,
@@ -96,4 +99,5 @@ def answer_review(
                   "recommendation": result.get("recommendation", "")},
         stage=stage,
         next_due_date=due,
+        newly_earned_badges=newly_earned,
     )

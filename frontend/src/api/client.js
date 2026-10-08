@@ -58,6 +58,7 @@ export const api = {
   startQuiz: (skill, goal_id) => apiClient.post('/quizzes/start', { skill, goal_id }).then((r) => r.data),
   answerQuiz: (id, answers) => apiClient.post(`/quizzes/${id}/submit`, { answers }).then((r) => r.data),
   getQuizHistory: () => apiClient.get('/quizzes/history').then((r) => r.data),
+  getMyProgress: () => apiClient.get('/me/progress').then((r) => r.data),
   getQuiz: (id) => apiClient.get(`/quizzes/${id}`).then((r) => r.data),
   // --- resume ---
   analyzeResume: (file, goalId) => {

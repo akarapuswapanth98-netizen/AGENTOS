@@ -18,6 +18,7 @@ from app.schemas import (
     TaskStatusUpdate,
     TutorResponse,
 )
+from app.utils.badges import check_and_award_badges, record_activity_day
 from app.utils.rate_limit import QuotaExceeded
 from app.utils.readiness import record_snapshot
 from app.utils.review_items import upsert_review_item
@@ -159,6 +160,12 @@ def submit_answer(
     logger.info(msg)
     record_snapshot(db, task.goal_id)
 
+    # Streaks + badges: completing a task counts as an active day.
+    newly_earned: list[str] = []
+    if task.status == "completed":
+        record_activity_day(db, user.id)
+        newly_earned = check_and_award_badges(db, user.id)
+
     return SubmitResponse(
         submission_id=submission.id,
         task_id=task.id,
@@ -167,6 +174,7 @@ def submit_answer(
         task_status=task.status,
         remedial_task=TaskResponse.model_validate(remedial) if remedial else None,
         message=msg,
+        newly_earned_badges=newly_earned,
     )
 
 

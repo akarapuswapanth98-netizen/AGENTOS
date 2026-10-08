@@ -214,3 +214,34 @@ class QuizAttempt(Base):
     elapsed_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
     timed_out: Mapped[bool] = mapped_column(nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, nullable=False)
+
+
+class ActivityDay(Base):
+    """One UTC day on which the user completed a task or finished a review."""
+
+    __tablename__ = "activity_days"
+    __table_args__ = (
+        Index("ix_activity_user_day", "user_id", "day"),
+        UniqueConstraint("user_id", "day"),
+        {"sqlite_autoincrement": True},
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    day: Mapped[date] = mapped_column(Date, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, nullable=False)
+
+
+class UserBadge(Base):
+    """One earned badge per user; never awarded twice."""
+
+    __tablename__ = "user_badges"
+    __table_args__ = (
+        UniqueConstraint("user_id", "badge"),
+        {"sqlite_autoincrement": True},
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    badge: Mapped[str] = mapped_column(String(64), nullable=False)
+    awarded_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, nullable=False)
