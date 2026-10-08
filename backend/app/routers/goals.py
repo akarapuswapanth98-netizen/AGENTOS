@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.agents.orchestrator import run_goal_pipeline, run_replan_pipeline
 from app.database import get_db
 from app.deps import get_current_user, get_owned_goal
-from app.models import AgentTrace, Goal, InterviewQuestion, InterviewSession, ReadinessSnapshot, SkillScore, Submission, Task, User
+from app.models import AgentTrace, Goal, InterviewQuestion, InterviewSession, ReadinessSnapshot, ResumeAnalysis, ReviewItem, SkillScore, Submission, Task, User
 from app.schemas import (
     GoalCreate,
     GoalDetailResponse,
@@ -131,6 +131,10 @@ def delete_goal(goal_id: int, db: Session = Depends(get_db), user: User = Depend
     db.query(AgentTrace).filter(AgentTrace.goal_id == goal_id).delete(synchronize_session=False)
     db.query(SkillScore).filter(SkillScore.goal_id == goal_id).delete(synchronize_session=False)
     db.query(ReadinessSnapshot).filter(ReadinessSnapshot.goal_id == goal_id).delete(synchronize_session=False)
+    db.query(ReviewItem).filter(ReviewItem.goal_id == goal_id).delete(synchronize_session=False)
+    db.query(ResumeAnalysis).filter(ResumeAnalysis.goal_id == goal_id).update(
+        {ResumeAnalysis.goal_id: None}, synchronize_session=False
+    )
     db.delete(goal)
     db.commit()
     logger.info("Deleted goal_id=%s", goal_id)

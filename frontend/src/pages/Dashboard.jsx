@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { api, getErrorMessage } from '../api/client.js'
 import AgentTrace from '../components/AgentTrace.jsx'
 import EmptyState from '../components/EmptyState.jsx'
@@ -55,12 +55,15 @@ function BuildingPlan() {
 // Dashboard: greeting, readiness overview, today's work, then goals.
 export default function Dashboard() {
   const navigate = useNavigate()
+  const [params] = useSearchParams()
+  const prefillSkills = params.get('skills') || ''
   const { user } = useAuth()
   const toast = useToast()
   const [goals, setGoals] = useState([])
   const [dash, setDash] = useState(null)
   const [categories, setCategories] = useState(null)
   const [history, setHistory] = useState([])
+  const [dueCount, setDueCount] = useState(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -70,9 +73,10 @@ export default function Dashboard() {
     setLoading(true)
     setError('')
     try {
-      const [goalList, dashboard] = await Promise.all([api.listGoals(), api.getDashboard()])
+      const [goalList, dashboard, due] = await Promise.all([api.listGoals(), api.getDashboard(), api.getDueReviews()])
       setGoals(goalList)
       setDash(dashboard)
+      setDueCount(due.count)
       if (dashboard.active_goal) {
         const [prog, hist] = await Promise.all([
           api.getProgress(dashboard.active_goal.id),
@@ -139,6 +143,11 @@ export default function Dashboard() {
               <p className="text-2xl font-bold text-indigo-600">{dash.active_goal ? dash.active_goal.readiness_score : '—'}</p>
               {dash.active_goal && <Link to={`/goals/${dash.active_goal.id}`} className="text-xs font-medium text-indigo-600 hover:underline">{dash.active_goal.title}</Link>}
             </div>
+            <Link to="/review" className="block rounded-xl bg-white p-4 shadow-sm transition hover:shadow-md">
+              <p className="text-xs text-slate-500">Reviews due</p>
+              <p className="text-2xl font-bold text-slate-900">{dueCount ?? '—'}</p>
+              <p className="text-xs font-medium text-indigo-600">Review today →</p>
+            </Link>
             <div className="rounded-xl bg-white p-4 shadow-sm">
               <p className="text-xs text-slate-500">Due today</p>
               <p className="text-2xl font-bold text-slate-900">{dash.today_tasks.length}</p>
@@ -195,7 +204,7 @@ export default function Dashboard() {
         </>
       )}
 
-      {submitting ? <BuildingPlan /> : <GoalForm onSubmit={handleCreate} submitting={submitting} />}
+      {submitting ? <BuildingPlan /> : <GoalForm onSubmit={handleCreate} submitting={submitting} initialSkills={prefillSkills} />}
 
       <div>
         <h2 className="mb-3 text-base font-semibold text-slate-900">Your goals</h2>

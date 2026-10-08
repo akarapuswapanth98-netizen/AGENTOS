@@ -20,5 +20,24 @@ services:
     depends_on:
       - backend
 
+  # Optional Postgres. Default profile runs SQLite only; start Postgres with:
+  #   docker compose --profile postgres up --build
+  # then point the backend at it (see docs/ER_DIAGRAM.md + README Docker section):
+  #   DATABASE_URL=postgresql+psycopg2://agentos:agentos@db:5432/agentos
+  db:
+    image: postgres:16-alpine
+    profiles: ["postgres"]
+    environment:
+      POSTGRES_USER: agentos
+      POSTGRES_PASSWORD: agentos
+      POSTGRES_DB: agentos
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agentos"]
+      interval: 5s
+      retries: 5
+
 volumes:
   agentos-data:
+  pgdata:

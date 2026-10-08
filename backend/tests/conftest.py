@@ -18,13 +18,19 @@ from app.models import AgentTrace, Goal, InterviewQuestion, InterviewSession, Sk
 from app.main import app
 
 TEST_DB = pathlib.Path(__file__).parent / "test_agentos.db"
-if TEST_DB.exists():
-    TEST_DB.unlink()
-TEST_URL = f"sqlite:///{TEST_DB.resolve()}"
-
-test_engine = create_engine(TEST_URL, connect_args={"check_same_thread": False}, poolclass=StaticPool)
+# Honor DATABASE_URL so CI can run the same suite against Postgres.
+# SQLite stays the default for local dev and always uses a fresh file.
+TEST_URL = os.getenv("DATABASE_URL", f"sqlite:///{TEST_DB.resolve()}")
+if TEST_URL.startswith("sqlite"):
+    if TEST_DB.exists():
+        TEST_DB.unlink()
+    test_engine = create_engine(TEST_URL, connect_args={"check_same_thread": False}, poolclass=StaticPool)
+    Base.metadata.create_all(bind=test_engine)
+else:
+    test_engine = create_engine(TEST_URL, pool_pre_ping=True)
+    Base.metadata.drop_all(bind=test_engine)
+    Base.metadata.create_all(bind=test_engine)
 TestingSession = sessionmaker(bind=test_engine, autoflush=False, autocommit=False, expire_on_commit=False)
-Base.metadata.create_all(bind=test_engine)
 
 
 def _override_db():

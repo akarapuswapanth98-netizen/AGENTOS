@@ -12,6 +12,8 @@ from app.models import (
     InterviewQuestion,
     InterviewSession,
     ReadinessSnapshot,
+    ResumeAnalysis,
+    ReviewItem,
     SkillScore,
     Submission,
     Task,
@@ -112,6 +114,7 @@ def delete_account(
             db.query(InterviewQuestion).filter(InterviewQuestion.session_id.in_(session_ids)).delete(synchronize_session=False)
         db.query(InterviewSession).filter(InterviewSession.goal_id.in_(goal_ids)).delete(synchronize_session=False)
         db.query(ReadinessSnapshot).filter(ReadinessSnapshot.goal_id.in_(goal_ids)).delete(synchronize_session=False)
+        db.query(ReviewItem).filter(ReviewItem.goal_id.in_(goal_ids)).delete(synchronize_session=False)
     if task_ids:
         db.query(Submission).filter(Submission.task_id.in_(task_ids)).delete(synchronize_session=False)
         db.query(Task).filter(Task.id.in_(task_ids)).delete(synchronize_session=False)
@@ -119,6 +122,8 @@ def delete_account(
         db.query(AgentTrace).filter(AgentTrace.goal_id.in_(goal_ids)).delete(synchronize_session=False)
         db.query(SkillScore).filter(SkillScore.goal_id.in_(goal_ids)).delete(synchronize_session=False)
         db.query(Goal).filter(Goal.id.in_(goal_ids)).delete(synchronize_session=False)
+    db.query(ResumeAnalysis).filter(ResumeAnalysis.user_id == user.id).delete(synchronize_session=False)
+    db.query(ReviewItem).filter(ReviewItem.user_id == user.id).delete(synchronize_session=False)
     db.query(User).filter(User.id == user.id).delete(synchronize_session=False)
     db.commit()
     logger.info("Deleted account user_id=%s", user.id)

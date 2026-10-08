@@ -1,5 +1,8 @@
 # AGENTOS — AI career planner that turns a goal into an executable, adaptive plan.
 
+[![CI](https://github.com/akarapuswapanth98-netizen/AGENTOS/actions/workflows/ci.yml/badge.svg)](https://github.com/akarapuswapanth98-netizen/AGENTOS/actions/workflows/ci.yml)
+<!-- Badge now points at akarapuswapanth98-netizen/AGENTOS. -->
+
 ## Problem
 
 Career changers drown in generic advice: tutorials with no order, no feedback,
@@ -77,6 +80,24 @@ docker compose up --build
 The backend image regenerates the ML model at build time (`python -m app.ml.train`)
 because `*.joblib` is gitignored. SQLite persists in the `agentos-data` volume.
 Docker files are written but untested here (Docker is not installed in this environment).
+
+### Postgres (optional)
+
+SQLite is the default for tests and local dev. For Postgres:
+
+```bash
+docker compose --profile postgres up --build -d db   # start postgres:16-alpine
+# in backend/.env (never commit it):
+DATABASE_URL=postgresql+psycopg2://agentos:agentos@localhost:5432/agentos
+cd backend && python -m alembic -c alembic.ini upgrade head   # create tables
+uvicorn app.main:app --reload
+```
+
+Schema changes ship as Alembic migrations (`backend/alembic/versions/`);
+`docs/ER_DIAGRAM.md` has the Mermaid ER diagram. Fresh SQLite installs pick up
+AUTOINCREMENT ids automatically; existing SQLite dev DBs predate them, so
+delete the local `.db` file once to recreate it (your data will be gone —
+reseed with `scripts/seed_demo.py`).
 
 ## Demo credentials
 
