@@ -113,9 +113,18 @@ class TutorResponse(BaseModel):
 
 
 class SubmitRequest(BaseModel):
-    """User answer submission. Empty strings allowed (validator scores them low)."""
+    """User answer submission. Must contain real text; short answers like "idk" are
+    allowed and simply score low."""
 
-    answer_text: str = Field(default="", max_length=20000)
+    answer_text: str = Field(min_length=1, max_length=20000)
+
+    @field_validator("answer_text")
+    @classmethod
+    def _not_blank(cls, value: str) -> str:
+        """Reject an empty or whitespace-only answer instead of scoring it."""
+        if not value.strip():
+            raise ValueError("answer_text must not be empty or blank")
+        return value
 
 
 class SubmitResponse(BaseModel):
@@ -304,9 +313,17 @@ class InterviewCreateRequest(BaseModel):
 
 
 class InterviewAnswerRequest(BaseModel):
-    """Payload answering one interview question."""
+    """Payload answering one interview question. Blank answers are rejected."""
 
-    answer_text: str = Field(default="", max_length=20000)
+    answer_text: str = Field(min_length=1, max_length=20000)
+
+    @field_validator("answer_text")
+    @classmethod
+    def _not_blank(cls, value: str) -> str:
+        """Reject an empty or whitespace-only answer instead of scoring it."""
+        if not value.strip():
+            raise ValueError("answer_text must not be empty or blank")
+        return value
 
 
 class InterviewQuestionResponse(BaseModel):
@@ -398,7 +415,15 @@ class ReviewAnswerRequest(BaseModel):
     """Answer a review question; question_text is echoed back by the client."""
 
     question_text: str = Field(default="", max_length=20000)
-    answer_text: str = Field(default="", max_length=20000)
+    answer_text: str = Field(min_length=1, max_length=20000)
+
+    @field_validator("answer_text")
+    @classmethod
+    def _not_blank(cls, value: str) -> str:
+        """Reject an empty or whitespace-only answer instead of scoring it."""
+        if not value.strip():
+            raise ValueError("answer_text must not be empty or blank")
+        return value
 
 
 class ReviewAnswerResponse(BaseModel):
