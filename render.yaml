@@ -1,0 +1,44 @@
+# Render Blueprint: AGENTOS backend (FastAPI) + Postgres, all on the free tier.
+#
+# One-click deploy: dashboard.render.com > New > Blueprint > select the
+# AGENTOS repo > fill in GROQ_API_KEY when asked > Apply. Render creates the
+# database, wires DATABASE_URL, generates JWT_SECRET, builds the Docker
+# image, runs the migrations, and starts the API.
+#
+# Free-tier notes: the web service sleeps after ~15 min idle (first request
+# after idle takes ~30-60 s); the free Postgres expires after 30 days, so
+# export anything you care about before then.
+
+services:
+  - type: web
+    name: agentos-backend
+    runtime: docker
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: agentos-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRE_MINUTES
+        value: 60
+      - key: CORS_ORIGINS
+        value: https://agentos-six-omega.vercel.app
+      - key: LLM_PROVIDER
+        value: groq
+      - key: GROQ_API_KEY
+        sync: false
+      - key: LLM_MOCK
+        value: false
+      - key: LLM_CALLS_PER_HOUR
+        value: 60
+
+databases:
+  - name: agentos-db
+    plan: free
