@@ -23,6 +23,16 @@ def test_list_tasks(client: TestClient, auth_headers: dict, goal_id: int):
     assert all(t["status"] == "pending" for t in pending.json())
 
 
+def test_list_tasks_status_all_returns_everything(client: TestClient, auth_headers: dict, goal_id: int):
+    """?status=all means "no filter": every task comes back, and junk is still 422."""
+    every = client.get(f"/goals/{goal_id}/tasks", headers=auth_headers).json()
+    resp = client.get(f"/goals/{goal_id}/tasks", params={"status": "all"}, headers=auth_headers)
+    assert resp.status_code == 200
+    assert [t["id"] for t in resp.json()] == [t["id"] for t in every]
+    assert len(resp.json()) >= 5
+    assert client.get(f"/goals/{goal_id}/tasks", params={"status": "bogus"}, headers=auth_headers).status_code == 422
+
+
 def test_submit_low_score_creates_remedial(client: TestClient, auth_headers: dict, goal_id: int):
     """A low score leaves the task in_progress and creates ONE remedial task."""
     tasks = client.get(f"/goals/{goal_id}/tasks", headers=auth_headers).json()
