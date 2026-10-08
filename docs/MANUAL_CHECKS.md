@@ -35,8 +35,10 @@ Open the browser devtools Network tab and filter by `resume`, `search`,
 - [ ] Analyze a second file right away. Response `200` again (this used to be
       `422 Field required` from the UI).
 - [ ] After each attempt the file input shows **empty** again.
-- [ ] Press Enter in the form with no file chosen -> banner says
-      **"Choose a .pdf or .txt file first"**, no request is sent.
+- [ ] With no file chosen the **Analyze resume** button is disabled, so the
+      "Choose a .pdf or .txt file first" message only appears if the form is
+      submitted some other way (it is a safety net, not a normal path); no
+      request is sent either way.
 - [ ] Pick a `.exe` (or rename a text file to `.exe`) -> friendly message
       **"That file type is not supported. Please choose a .pdf or .txt file."**,
       never raw `Field required` JSON.
@@ -54,10 +56,11 @@ Open the browser devtools Network tab and filter by `resume`, `search`,
 ## BUG-03 (Medium) - search count text
 
 - [ ] Goal detail -> leave the search box empty, tick **Overdue only**.
-      The count reads e.g. "3 matches for overdue only" (never `for ""`).
-- [ ] Pick a skill in the dropdown instead -> "... for python" or
-      "... for python / overdue only".
-- [ ] Type `sql` as well -> "... for "sql" / python".
+      The count reads e.g. `3 matches for overdue only` (never an empty query).
+- [ ] Pick a skill in the dropdown instead -> `2 matches for python`.
+- [ ] Tick both -> one line with `python` and `overdue only` separated by a dot.
+- [ ] Type `sql` as well -> the query text shows up in the app's quote marks
+      ahead of the skill, e.g. `2 matches for "sql" . python`.
 
 ## BUG-04 (Medium) - status chips during search
 
@@ -69,13 +72,25 @@ Open the browser devtools Network tab and filter by `resume`, `search`,
 - [ ] Click **all** -> only the query remains in effect.
 - [ ] Clear the search box -> the plain status filter takes over again and the
       task list reloads.
+- [ ] With **Overdue only** ticked, click the **completed** chip -> a second
+      line explains that no overdue tasks are completed (NEW-08).
+
+## NEW-02 / NEW-03 (Medium) - blank answers are refused
+
+- [ ] Task detail, review item, interview question: leave the answer box empty
+      -> the submit button is disabled and the hint **"Write an answer first -
+      an empty answer is not submitted."** appears. No request is sent.
+- [ ] Type three spaces -> still disabled (the check trims).
+- [ ] Type `idk` -> the button enables, the request goes out and is scored low
+      (still a valid answer on all three pages).
 
 ## BUG-05 (Low) - quiz double submit
 
 - [ ] Start a quiz, answer everything, then double-click **Submit answers**
       quickly. Devtools shows **exactly one** `POST /quizzes/<id>/submit`, no
       `409`, no error toast.
-- [ ] Answering nothing and pressing Enter in the form also sends one request.
+- [ ] With no option selected, click **Submit answers**: still **exactly one**
+      `POST /quizzes/<id>/submit` (scored with five skips).
 
 ## BUG-06 (Low) - quiet refresh
 
@@ -109,3 +124,21 @@ Open the browser devtools Network tab and filter by `resume`, `search`,
       shows "Saving..." and is disabled until the request returns; only one
       `PATCH /tasks/<id>/due-date` is sent per click.
 - [ ] Same for **Clear**.
+
+## Goal edit save (NEW-07)
+
+- [ ] Goal detail -> **Edit goal**, then hammer **Save changes**. The button
+      shows "Saving..." and is disabled until the request returns; the edit
+      form closes on success, as before.
+
+## Known unused by the UI (NEW-04)
+
+These backend routes exist and are covered by pytest, but no page calls them
+after the dead client wrappers were removed. Nothing to click - this list only
+records them so nobody re-adds a wrapper for them by accident:
+
+- `PATCH /tasks/{task_id}/status` - also the only route with no test, so it now
+  has one.
+- `GET /me/overdue` - the dashboard reads overdue counts from `/dashboard`.
+- `GET /resume/latest` - the Resume page only shows the result it just fetched.
+- `GET /quizzes/{attempt_id}` - the quiz page keeps its attempt in memory.

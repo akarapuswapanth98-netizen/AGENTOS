@@ -36,6 +36,7 @@ export default function GoalDetail() {
   const [error, setError] = useState('')
   const [replanning, setReplanning] = useState(false)
   const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [editTitle, setEditTitle] = useState('')
   const [editRole, setEditRole] = useState('')
   const [editDays, setEditDays] = useState(28)
@@ -87,6 +88,8 @@ export default function GoalDetail() {
 
   async function handleEdit(e) {
     e.preventDefault()
+    if (saving) return           // ignore extra clicks until the save returns
+    setSaving(true)
     setError('')
     try {
       const updated = await api.updateGoal(id, {
@@ -101,6 +104,8 @@ export default function GoalDetail() {
       const msg = getErrorMessage(err, 'Could not update goal')
       setError(msg)
       toast.error(msg)
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -218,8 +223,9 @@ export default function GoalDetail() {
             <input type="number" min="1" max="365" value={editDays} onChange={(e) => setEditDays(e.target.value)} required
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none" />
           </div>
-          <button className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
-            Save changes
+          <button disabled={saving}
+            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60">
+            {saving ? 'Saving...' : 'Save changes'}
           </button>
         </form>
       )}
