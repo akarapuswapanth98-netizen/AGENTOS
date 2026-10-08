@@ -17,3 +17,4 @@ reportlab==5.0.1
 alembic==1.19.1
 psycopg2-binary==2.9.13
 pypdf==6.19.0
+mangum==0.22.0
