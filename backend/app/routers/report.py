@@ -16,6 +16,7 @@ from app.database import get_db
 from app.deps import get_current_user, get_owned_goal
 from app.models import Goal, InterviewSession, SkillScore, Task, User
 from app.schemas import ReportResponse
+from app.utils.pdf_text import esc
 from app.utils.rate_limit import QuotaExceeded
 from app.utils.readiness import compute_categories, projected_readiness, readiness_from
 
@@ -83,7 +84,7 @@ def _build_pdf(user_name: str, goal: Goal, report: ReportResponse) -> bytes:
     parts = [
         Paragraph("AGENTOS Career Report", styles["Title"]),
         Spacer(1, 0.4 * cm),
-        Paragraph(f"{user_name} &mdash; {goal.title} ({goal.target_role})", styles["Normal"]),
+        Paragraph(f"{esc(user_name)} &mdash; {esc(goal.title)} ({esc(goal.target_role)})", styles["Normal"]),
         Paragraph(f"Date: {datetime.now().strftime('%Y-%m-%d')}", styles["Normal"]),
         Spacer(1, 0.4 * cm),
         Paragraph(f"Readiness score: {report.readiness_score} / 100", styles["Heading2"]),
@@ -95,8 +96,8 @@ def _build_pdf(user_name: str, goal: Goal, report: ReportResponse) -> bytes:
             style=TableStyle([("GRID", (0, 0), (-1, -1), 0.5, "grey"), ("BACKGROUND", (0, 0), (-1, 0), "lightgrey")]),
         ),
         Spacer(1, 0.4 * cm),
-        Paragraph(f"Strong areas: {', '.join(report.strong_areas) or '—'}", styles["Normal"]),
-        Paragraph(f"Weak areas: {', '.join(report.weak_areas) or '—'}", styles["Normal"]),
+        Paragraph(f"Strong areas: {esc(', '.join(report.strong_areas)) or '—'}", styles["Normal"]),
+        Paragraph(f"Weak areas: {esc(', '.join(report.weak_areas)) or '—'}", styles["Normal"]),
         Paragraph(
             f"Tasks: {report.tasks_completed}/{report.tasks_total} completed"
             + (f", average score {report.avg_score}" if report.avg_score is not None else ""), styles["Normal"],
@@ -105,7 +106,7 @@ def _build_pdf(user_name: str, goal: Goal, report: ReportResponse) -> bytes:
         Paragraph("Recommended next steps", styles["Heading3"]),
     ]
     for i, step in enumerate(report.next_steps, 1):
-        parts.append(Paragraph(f"{i}. {step}", styles["Normal"]))
+        parts.append(Paragraph(f"{i}. {esc(step)}", styles["Normal"]))
     doc.build(parts)
     return buf.getvalue()
 

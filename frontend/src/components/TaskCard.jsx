@@ -25,11 +25,17 @@ export default function TaskCard({ task }) {
           {task.status}
         </span>
         <span className="text-xs text-slate-400">Week {task.week} · #{task.order}</span>
+        {task.is_overdue && (
+          <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
+            {task.days_overdue} {task.days_overdue === 1 ? 'day' : 'days'} overdue
+          </span>
+        )}
       </div>
       <h4 className="mt-2 font-medium text-slate-900">{task.title}</h4>
       <p className="mt-1 line-clamp-2 text-sm text-slate-500">{task.description}</p>
       <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-500">
         <span>Skill: <b className="text-slate-700">{task.skill}</b></span>
+        {task.due_date && <span>Due: <b className="text-slate-700">{new Date(task.due_date).toLocaleDateString()}</b></span>}
         {task.score !== null && task.score !== undefined && <span>Score: <b className="text-slate-700">{task.score}</b></span>}
         <span>Attempts: <b className="text-slate-700">{task.attempts}</b></span>
       </div>

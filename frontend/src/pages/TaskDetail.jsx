@@ -20,6 +20,9 @@ export default function TaskDetail() {
   const [history, setHistory] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [dueInput, setDueInput] = useState('')
+  const [noteInput, setNoteInput] = useState('')
+  const [noteState, setNoteState] = useState('idle')  // idle | saving | saved | error
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -28,12 +31,58 @@ export default function TaskDetail() {
       const [t, h] = await Promise.all([api.getTask(id), api.getSubmissions(id)])
       setTask(t)
       setHistory(h)
+      setDueInput(t.due_date ? t.due_date.slice(0, 10) : '')
+      setNoteInput(t.note || '')
+      setNoteState('idle')
     } catch (err) {
       setError(getErrorMessage(err, 'Could not load task'))
     } finally {
       setLoading(false)
     }
   }, [id])
+
+  async function saveDueDate(value) {    setError('')
+    try {
+      const updated = await api.updateTaskDueDate(id, value || null)
+      setTask(updated)
+      setDueInput(updated.due_date ? updated.due_date.slice(0, 10) : '')
+      toast.success(value ? 'Due date saved' : 'Due date cleared')
+    } catch (err) {
+      const msg = getErrorMessage(err, 'Could not save due date')
+      setError(msg)
+      toast.error(msg)
+    }
+  }
+
+  function handleDueDate(e) {
+    e.preventDefault()
+    saveDueDate(dueInput || null)
+  }
+
+  function clearDueDate() {
+    saveDueDate(null)
+  }
+
+  async function saveNote() {
+    if (noteInput.length > 2000) {
+      setNoteState('error')
+      return
+    }
+    setNoteState('saving')
+    setError('')
+    try {
+      const updated = await api.updateTaskNote(id, noteInput.trim() ? noteInput : null)
+      setTask(updated)
+      setNoteInput(updated.note || '')
+      setNoteState('saved')
+      toast.success('Note saved')
+    } catch (err) {
+      const msg = getErrorMessage(err, 'Could not save note')
+      setError(msg)
+      setNoteState('error')
+      toast.error(msg)
+    }
+  }
 
   useEffect(() => { load() }, [load])
 
@@ -57,6 +106,7 @@ export default function TaskDetail() {
       const res = await api.submitAnswer(id, answer)
       setResult(res)
       toast.success(`Scored ${res.score} / 100`)
+      for (const b of res.newly_earned_badges || []) toast.success(`Badge earned: ${b}`)
       // Refresh task status/score and submission history.
       const [t, h] = await Promise.all([api.getTask(id), api.getSubmissions(id)])
       setTask(t)
@@ -87,6 +137,30 @@ export default function TaskDetail() {
         <h1 className="mt-2 text-xl font-bold text-slate-900">{task.title}</h1>
         <p className="mt-2 text-sm text-slate-600">{task.description}</p>
         <p className="mt-2 text-xs text-slate-400">Week {task.week} · #{task.order} · {task.attempts} attempt(s){task.score != null && ` · score ${task.score}`}</p>
+        <form onSubmit={handleDueDate} className="mt-3 flex flex-wrap items-center gap-2">
+          <label className="text-xs text-slate-500">Due date{task.due_date ? ` (now ${new Date(task.due_date).toLocaleDateString()})` : ' (none)'}</label>
+          <input type="date" value={dueInput} onChange={(e) => setDueInput(e.target.value)}
+            className="rounded-lg border border-slate-300 px-2 py-1 text-xs focus:border-indigo-500 focus:outline-none" />
+          <button className="rounded-lg bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-200">Save</button>
+          {task.due_date && (
+            <button type="button" onClick={clearDueDate} className="rounded-lg px-3 py-1 text-xs font-semibold text-red-600 hover:bg-red-50">Clear</button>
+          )}
+        </form>
+        <div className="mt-3">
+          <label className="text-xs text-slate-500">Private note (plain text, never sent to the AI)</label>
+          <textarea value={noteInput} onChange={(e) => { setNoteInput(e.target.value); setNoteState('idle') }} rows={3} maxLength={2000}
+            placeholder="Anything you want to remember about this task…"
+            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none" />
+          <div className="mt-1 flex items-center gap-2">
+            <button onClick={saveNote} disabled={noteState === 'saving'}
+              className="rounded-lg bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-200 disabled:opacity-60">
+              {noteState === 'saving' ? 'Saving…' : 'Save note'}
+            </button>
+            <span className="text-xs text-slate-400">{noteInput.length}/2000</span>
+            {noteState === 'saved' && <span className="text-xs font-medium text-green-600">Saved</span>}
+            {noteState === 'error' && <span className="text-xs font-medium text-red-600">Could not save</span>}
+          </div>
+        </div>
       </div>
 
       <div className="rounded-xl bg-white p-5 shadow-sm">

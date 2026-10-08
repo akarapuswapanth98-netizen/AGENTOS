@@ -32,14 +32,7 @@ export default function Report() {
     setDownloading(true)
     try {
       const blob = await api.downloadReportPdf(id)
-      const url = window.URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }))
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `agentos-report-goal-${id}.pdf`
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-      window.URL.revokeObjectURL(url)
+      saveBlob(blob, `agentos-report-goal-${id}.pdf`)
       toast.success('PDF downloaded')
     } catch (err) {
       const msg = getErrorMessage(err, 'Could not download PDF')
@@ -48,6 +41,32 @@ export default function Report() {
     } finally {
       setDownloading(false)
     }
+  }
+
+  async function handleCareerDownload() {
+    setDownloading(true)
+    try {
+      const blob = await api.downloadCareerPdf(Number(id))
+      saveBlob(blob, 'career-report.pdf')
+      toast.success('Career PDF downloaded')
+    } catch (err) {
+      const msg = getErrorMessage(err, 'Could not download career PDF')
+      setError(msg)
+      toast.error(msg)
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  function saveBlob(blob, filename) {
+    const url = window.URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    window.URL.revokeObjectURL(url)
   }
 
   if (loading) return <Loader label="Building report…" />
@@ -113,6 +132,10 @@ export default function Report() {
         <button onClick={handleDownload} disabled={downloading}
           className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60">
           {downloading ? 'Preparing PDF…' : 'Download PDF'}
+        </button>
+        <button onClick={handleCareerDownload} disabled={downloading}
+          className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-700 disabled:opacity-60">
+          Download career report PDF
         </button>
         <button onClick={() => window.print()} className="rounded-lg bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-200">
           Print

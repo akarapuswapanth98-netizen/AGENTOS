@@ -20,9 +20,9 @@ def _indexed_columns(table) -> set[str]:
 
 def test_all_foreign_keys_cascade():
     """Every FK in the schema carries ON DELETE CASCADE (except resume goal links)."""
-    # resume_analyses.goal_id is SET NULL by design: deleting a goal keeps the
-    # analysis history but detaches it from the deleted goal.
-    allowed = {("resume_analyses", "goal_id"): "SET NULL"}
+    # resume_analyses.goal_id and quiz_attempts.goal_id are SET NULL by design:
+    # deleting a goal keeps history but detaches it from the deleted goal.
+    allowed = {("resume_analyses", "goal_id"): "SET NULL", ("quiz_attempts", "goal_id"): "SET NULL"}
     for table in Base.metadata.tables.values():
         for fk in table.foreign_keys:
             expected = allowed.get((table.name, fk.parent.name), "CASCADE")
@@ -41,11 +41,16 @@ def test_hot_columns_are_indexed():
         "interview_questions": {"session_id"},
         "readiness_snapshots": {"goal_id"},
         "review_items": {"user_id", "goal_id"},
+        "quiz_attempts": {"user_id", "goal_id", "status"},
+        "activity_days": {"user_id"},
+        "user_badges": {"user_id"},
     }
     for table_name, columns in expectations.items():
         covered = _indexed_columns(Base.metadata.tables[table_name])
         assert columns <= covered, f"{table_name} missing indexes for {columns - covered}"
     assert "ix_reviews_user_due" in {i.name for i in Base.metadata.tables["review_items"].indexes}
+    assert "ix_tasks_goal_due" in {i.name for i in Base.metadata.tables["tasks"].indexes}
+    assert "ix_activity_user_day" in {i.name for i in Base.metadata.tables["activity_days"].indexes}
     unique_cols = [tuple(sorted(c.name for c in constraint.columns))
                    for constraint in Base.metadata.tables["review_items"].constraints
                    if constraint.__class__.__name__ == "UniqueConstraint"]
@@ -91,3 +96,9 @@ def test_initial_migration_covers_all_tables():
     for table in Base.metadata.tables:
         assert f'"{table}"' in combined, f"migrations missing table {table}"
     assert "ondelete=\"CASCADE\"" in combined or "ondelete='CASCADE'" in combined
+
+
+def test_all_tables_use_autoincrement():
+    """Every table opts into SQLite AUTOINCREMENT (no id reuse anywhere)."""
+    for table in Base.metadata.tables.values():
+        assert table.kwargs.get("sqlite_autoincrement") is True, table.name

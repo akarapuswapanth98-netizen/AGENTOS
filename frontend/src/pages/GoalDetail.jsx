@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { api, getErrorMessage } from '../api/client.js'
 import AgentTrace from '../components/AgentTrace.jsx'
 import EmptyState from '../components/EmptyState.jsx'
@@ -9,7 +9,7 @@ import Skeleton from '../components/Skeleton.jsx'
 import TaskCard from '../components/TaskCard.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 
-const FILTERS = ['all', 'pending', 'in_progress', 'completed']
+const FILTERS = ['all', 'pending', 'in_progress', 'completed', 'overdue']
 
 // Goal overview: analysis header, progress panel, week-grouped tasks, agent trace.
 export default function GoalDetail() {
@@ -20,6 +20,18 @@ export default function GoalDetail() {
   const [trace, setTrace] = useState([])
   const [tasks, setTasks] = useState([])
   const [filter, setFilter] = useState('all')
+  const [searchQ, setSearchQ] = useState('')
+  const [searchSkill, setSearchSkill] = useState('')
+  const [searchOverdue, setSearchOverdue] = useState(false)
+  const [searching, setSearching] = useState(false)
+  const [searchTotal, setSearchTotal] = useState(0)
+  const searchActive = searchQ.trim() !== '' || searchSkill !== '' || searchOverdue
+  const skillOptions = useMemo(() => goal?.current_skills || [], [goal])
+  const [params] = useSearchParams()
+  const initialFilter = params.get('filter')
+  useEffect(() => {
+    if (initialFilter && FILTERS.includes(initialFilter)) setFilter(initialFilter)
+  }, [initialFilter])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [replanning, setReplanning] = useState(false)
@@ -93,11 +105,30 @@ export default function GoalDetail() {
   }
 
   // Re-query the filterable tasks endpoint when the status filter changes.
+  // "overdue" is computed client-side from the server's overdue flags.
   useEffect(() => {
+    if (searchActive) return  // search effect below takes over
     let cancelled = false
-    api.getGoalTasks(id, filter).then((t) => { if (!cancelled) setTasks(t) }).catch(() => {})
+    const status = filter === 'overdue' ? 'all' : filter
+    api.getGoalTasks(id, status).then((t) => {
+      if (!cancelled) setTasks(filter === 'overdue' ? t.filter((x) => x.is_overdue) : t)
+    }).catch(() => {})
     return () => { cancelled = true }
-  }, [id, filter])
+  }, [id, filter, searchActive])
+
+  // Debounced server search scoped to this goal (~300 ms).
+  useEffect(() => {
+    if (!searchActive) return
+    setSearching(true)
+    const timer = setTimeout(() => {
+      api.searchTasks({ q: searchQ.trim() || undefined, skill: searchSkill || undefined,
+                        overdue: searchOverdue || undefined, goal_id: id })
+        .then((res) => { setTasks(res.items); setSearchTotal(res.total) })
+        .catch((err) => setError(getErrorMessage(err, 'Search failed')))
+        .finally(() => setSearching(false))
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [id, searchQ, searchSkill, searchOverdue, searchActive])
 
   const byWeek = useMemo(() => {
     const groups = {}
@@ -180,6 +211,26 @@ export default function GoalDetail() {
 
       <ProgressPanel progress={progress} />
 
+      <div className="rounded-xl bg-white p-4 shadow-sm">
+        <div className="grid gap-2 sm:grid-cols-4">
+          <input value={searchQ} onChange={(e) => setSearchQ(e.target.value)} placeholder="Search title, description, note…"
+            className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none sm:col-span-2" />
+          <select value={searchSkill} onChange={(e) => setSearchSkill(e.target.value)}
+            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none">
+            <option value="">All skills</option>
+            {skillOptions.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+          <label className="flex items-center gap-2 text-sm text-slate-600">
+            <input type="checkbox" checked={searchOverdue} onChange={(e) => setSearchOverdue(e.target.checked)} />
+            Overdue only
+          </label>
+        </div>
+        {searching && <p className="mt-2 text-xs text-slate-400">Searching…</p>}
+        {searchActive && !searching && (
+          <p className="mt-2 text-xs text-slate-500">{searchTotal} match{searchTotal === 1 ? '' : 'es'} for “{searchQ}”</p>
+        )}
+      </div>
+
       <div>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-base font-semibold text-slate-900">Tasks</h2>
@@ -193,7 +244,7 @@ export default function GoalDetail() {
           </div>
         </div>
         {tasks.length === 0 ? (
-          <EmptyState title="No tasks here" hint="Try a different status filter, or re-plan the goal." />
+          <EmptyState title="No tasks match" hint="Try a different search or status filter, or re-plan the goal." />
         ) : (
           byWeek.map(([week, list]) => (
             <div key={week} className="mb-4">

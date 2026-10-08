@@ -9,6 +9,7 @@ from app.database import get_db
 from app.deps import get_current_user, get_owned_goal
 from app.models import ResumeAnalysis, User
 from app.schemas import ResumeAnalysisResponse
+from app.utils.badges import check_and_award_badges
 from app.utils.rate_limit import QuotaExceeded
 from app.utils.resume_text import extract_resume_text
 
@@ -48,6 +49,7 @@ async def analyze_resume(
     db.add(row)
     db.commit()
     db.refresh(row)
+    check_and_award_badges(db, user.id)  # resume_uploaded badge (no new activity day)
     logger.info("Stored resume analysis id=%s score=%s", row.id, row.score)
     return ResumeAnalysisResponse.model_validate(row)
 

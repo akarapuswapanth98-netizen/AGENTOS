@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.agents.orchestrator import run_goal_pipeline, run_replan_pipeline
 from app.database import get_db
 from app.deps import get_current_user, get_owned_goal
-from app.models import AgentTrace, Goal, InterviewQuestion, InterviewSession, ReadinessSnapshot, ResumeAnalysis, ReviewItem, SkillScore, Submission, Task, User
+from app.models import AgentTrace, Goal, InterviewQuestion, InterviewSession, QuizAttempt, ReadinessSnapshot, ResumeAnalysis, ReviewItem, SkillScore, Submission, Task, User
 from app.schemas import (
     GoalCreate,
     GoalDetailResponse,
@@ -16,6 +16,7 @@ from app.schemas import (
     GoalWithPlanResponse,
     TaskResponse,
     TraceResponse,
+    to_task_response,
 )
 from app.utils.readiness import record_snapshot
 
@@ -48,7 +49,7 @@ def create_goal(
     trace = db.query(AgentTrace).filter(AgentTrace.goal_id == goal.id).order_by(AgentTrace.id).all()
     return GoalWithPlanResponse(
         goal=GoalResponse.model_validate(goal),
-        tasks=[TaskResponse.model_validate(t) for t in tasks],
+        tasks=[to_task_response(t) for t in tasks],
         trace=[TraceResponse.model_validate(t) for t in trace],
     )
 
@@ -67,7 +68,7 @@ def get_goal(goal_id: int, db: Session = Depends(get_db), user: User = Depends(g
     tasks = db.query(Task).filter(Task.goal_id == goal.id).order_by(Task.week, Task.order).all()
     return GoalDetailResponse(
         goal=GoalResponse.model_validate(goal),
-        tasks=[TaskResponse.model_validate(t) for t in tasks],
+        tasks=[to_task_response(t) for t in tasks],
     )
 
 
@@ -111,7 +112,7 @@ def replan_goal(
     trace = db.query(AgentTrace).filter(AgentTrace.goal_id == goal.id).order_by(AgentTrace.id).all()
     return GoalWithPlanResponse(
         goal=GoalResponse.model_validate(goal),
-        tasks=[TaskResponse.model_validate(t) for t in tasks],
+        tasks=[to_task_response(t) for t in tasks],
         trace=[TraceResponse.model_validate(t) for t in trace],
     )
 
@@ -134,6 +135,9 @@ def delete_goal(goal_id: int, db: Session = Depends(get_db), user: User = Depend
     db.query(ReviewItem).filter(ReviewItem.goal_id == goal_id).delete(synchronize_session=False)
     db.query(ResumeAnalysis).filter(ResumeAnalysis.goal_id == goal_id).update(
         {ResumeAnalysis.goal_id: None}, synchronize_session=False
+    )
+    db.query(QuizAttempt).filter(QuizAttempt.goal_id == goal_id).update(
+        {QuizAttempt.goal_id: None}, synchronize_session=False
     )
     db.delete(goal)
     db.commit()
@@ -165,4 +169,4 @@ def list_goal_tasks(
             raise HTTPException(status_code=422, detail="Invalid status filter")
         q = q.filter(Task.status == status)
     rows = q.order_by(Task.week, Task.order).all()
-    return [TaskResponse.model_validate(r) for r in rows]
+    return [to_task_response(r) for r in rows]

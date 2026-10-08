@@ -11,6 +11,9 @@ erDiagram
     users ||--o{ interview_sessions : owns
     users ||--o{ resume_analyses : analyzes
     users ||--o{ review_items : reviews
+    users ||--o{ quiz_attempts : quizzes
+    users ||--o{ activity_days : streaks
+    users ||--o{ user_badges : earns
     goals ||--o{ tasks : has
     goals ||--o{ agent_traces : logs
     goals ||--o{ skill_scores : tracks
@@ -18,6 +21,7 @@ erDiagram
     goals ||--o{ interview_sessions : interviews
     goals ||--o{ resume_analyses : compared
     goals ||--o{ review_items : practices
+    goals ||--o{ quiz_attempts : tested
     tasks ||--o{ submissions : answers
     interview_sessions ||--o{ interview_questions : asks
 
@@ -53,6 +57,7 @@ erDiagram
         int attempts
         datetime due_date
         datetime completed_at
+        text note
         datetime created_at
     }
     submissions {
@@ -126,10 +131,38 @@ erDiagram
         datetime last_reviewed_at
         datetime created_at
     }
+    quiz_attempts {
+        int id PK
+        int user_id FK
+        int goal_id FK_NULL
+        string skill
+        json questions
+        json answers
+        int score
+        string status
+        datetime started_at
+        datetime submitted_at
+        int elapsed_seconds
+        bool timed_out
+        datetime created_at
+    }
+    activity_days {
+        int id PK
+        int user_id FK
+        date day
+        datetime created_at
+    }
+    user_badges {
+        int id PK
+        int user_id FK
+        string badge
+        datetime awarded_at
+    }
 ```
 
 Hot paths are indexed: every `user_id` / `goal_id` / `session_id` / `task_id`
 foreign key, every `status` column, plus composites
-`tasks(goal_id, status)` and `readiness_snapshots(goal_id, date)`.
+`tasks(goal_id, status)`, `tasks(goal_id, due_date)` and
+`readiness_snapshots(goal_id, date)`.
 Ids use `AUTOINCREMENT` on SQLite so deleted row ids are never reused.
 Schema changes ship as Alembic migrations in `backend/alembic/versions/`.

@@ -48,6 +48,7 @@ class Task(Base):
     __tablename__ = "tasks"
     __table_args__ = (
         Index("ix_tasks_goal_status", "goal_id", "status"),
+        Index("ix_tasks_goal_due", "goal_id", "due_date"),
         {"sqlite_autoincrement": True},
     )
 
@@ -64,6 +65,7 @@ class Task(Base):
     attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     due_date: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, nullable=False)
 
 
@@ -174,7 +176,6 @@ class ResumeAnalysis(Base):
 
 class ReviewItem(Base):
     """One skill due for spaced-repetition review. Unique per user/skill/goal."""
-
     __tablename__ = "review_items"
     __table_args__ = (
         Index("ix_reviews_user_due", "user_id", "due_date"),
@@ -191,3 +192,58 @@ class ReviewItem(Base):
     last_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
     last_reviewed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, nullable=False)
+
+
+class QuizAttempt(Base):
+    """One 5-question practice quiz. Answers stay hidden until submitted."""
+
+    __tablename__ = "quiz_attempts"
+    __table_args__ = (
+        Index("ix_quiz_user_started", "user_id", "started_at"),
+        {"sqlite_autoincrement": True},
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    goal_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("goals.id", ondelete="SET NULL"), index=True, nullable=True)
+    skill: Mapped[str] = mapped_column(String(60), nullable=False)
+    questions: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    answers: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    score: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="in_progress", index=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, nullable=False)
+    submitted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    elapsed_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    timed_out: Mapped[bool] = mapped_column(nullable=False, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, nullable=False)
+
+
+class ActivityDay(Base):
+    """One UTC day on which the user completed a task or finished a review."""
+
+    __tablename__ = "activity_days"
+    __table_args__ = (
+        Index("ix_activity_user_day", "user_id", "day"),
+        UniqueConstraint("user_id", "day"),
+        {"sqlite_autoincrement": True},
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    day: Mapped[date] = mapped_column(Date, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, nullable=False)
+
+
+class UserBadge(Base):
+    """One earned badge per user; never awarded twice."""
+
+    __tablename__ = "user_badges"
+    __table_args__ = (
+        UniqueConstraint("user_id", "badge"),
+        {"sqlite_autoincrement": True},
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    badge: Mapped[str] = mapped_column(String(64), nullable=False)
+    awarded_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, nullable=False)

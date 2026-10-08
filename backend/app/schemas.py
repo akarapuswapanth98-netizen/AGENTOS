@@ -2,7 +2,7 @@
 from datetime import date, datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 TaskType = Literal["learn", "practice", "project", "remedial"]
 TaskStatus = Literal["pending", "in_progress", "completed"]
@@ -51,7 +51,21 @@ class TaskResponse(BaseModel):
     attempts: int
     due_date: datetime | None = None
     completed_at: datetime | None = None
+    note: str | None = None
     created_at: datetime
+    is_overdue: bool = False
+    days_overdue: int = 0
+
+
+def to_task_response(task, today: date | None = None) -> "TaskResponse":
+    """Build a TaskResponse with server-computed overdue flags."""
+    from app.utils.task_dates import days_overdue, is_overdue
+
+    day = today or date.today()
+    data = TaskResponse.model_validate(task)
+    data.is_overdue = is_overdue(task.due_date, task.status, day)
+    data.days_overdue = days_overdue(task.due_date, day) if data.is_overdue else 0
+    return data
 
 
 class TraceResponse(BaseModel):
@@ -114,6 +128,7 @@ class SubmitResponse(BaseModel):
     task_status: str
     remedial_task: TaskResponse | None = None
     message: str
+    newly_earned_badges: list[str] = []
 
 
 class SubmissionResponse(BaseModel):
@@ -394,3 +409,154 @@ class ReviewAnswerResponse(BaseModel):
     feedback: dict[str, Any]
     stage: int
     next_due_date: date
+    newly_earned_badges: list[str] = []
+
+
+class QuizStartRequest(BaseModel):
+    """Start a quiz for a skill, optionally linked to a goal."""
+
+    skill: str = Field(min_length=1, max_length=60)
+    goal_id: int | None = None
+
+
+class QuizQuestionPublic(BaseModel):
+    """One question without the answer or explanation."""
+
+    question: str
+    options: list[str]
+
+
+class QuizStartResponse(BaseModel):
+    """New attempt id plus answer-free questions."""
+
+    id: int
+    skill: str
+    questions: list[QuizQuestionPublic]
+    time_limit_seconds: int
+
+
+class QuizSubmitRequest(BaseModel):
+    """Five answers (0-3) or null for skipped questions."""
+
+    answers: list[int | None] = Field(min_length=5, max_length=5)
+
+    @field_validator("answers")
+    @classmethod
+    def _in_range(cls, values: list[int | None]) -> list[int | None]:
+        """Each answer must be 0-3 or null (skipped)."""
+        for v in values:
+            if v is not None and (not isinstance(v, int) or isinstance(v, bool) or not 0 <= v <= 3):
+                raise ValueError("Each answer must be 0-3 or null")
+        return values
+
+
+class QuizResultItem(BaseModel):
+    """Per-question grading with the correct answer and explanation."""
+
+    question: str
+    options: list[str]
+    your_answer: int | None
+    correct_index: int
+    correct: bool
+    explanation: str
+
+
+class QuizSubmitResponse(BaseModel):
+    """Quiz score, per-question results, timeout flag, review side effect."""
+
+    id: int
+    score: int
+    results: list[QuizResultItem]
+    timed_out: bool
+    elapsed_seconds: int
+    review_created: bool
+
+
+class QuizHistoryItem(BaseModel):
+    """One submitted attempt for the history list."""
+
+    id: int
+    skill: str
+    score: int
+    elapsed_seconds: int
+    timed_out: bool
+    submitted_at: datetime | None = None
+
+
+class QuizAttemptResponse(BaseModel):
+    """One attempt; answers included only after submission."""
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    goal_id: int | None = None
+    skill: str
+    questions: list[dict[str, Any]]
+    answers: list[int | None] | None = None
+    score: int | None = None
+    status: str
+    started_at: datetime
+    submitted_at: datetime | None = None
+    elapsed_seconds: int | None = None
+    timed_out: bool
+
+
+class EarnedBadge(BaseModel):
+    """One earned badge with its award date."""
+
+    badge: str
+    awarded_at: datetime
+
+
+class LockedBadge(BaseModel):
+    """One unearned badge with its how-to-earn hint."""
+
+    badge: str
+    hint: str
+
+
+class MeProgressResponse(BaseModel):
+    """Streaks plus earned and locked badges for the current user."""
+    current_streak: int
+    longest_streak: int
+    earned: list[EarnedBadge]
+    locked: list[LockedBadge]
+
+
+class DueDateUpdate(BaseModel):
+    """Set or clear a task's due date (ISO date string; 422 on bad input)."""
+
+    due_date: date | None = None
+
+
+class OverdueResponse(BaseModel):
+    """The user's overdue tasks, most overdue first, plus a count."""
+
+    items: list[TaskResponse]
+    count: int
+
+
+class WeeklySummaryResponse(BaseModel):
+    """One week's computed numbers plus a coaching paragraph."""
+
+    week_start: date
+    week_end: date
+    tasks_completed: int
+    average_score: float | None
+    weakest_skill: str | None
+    reviews_done: int
+    active_days: int
+    current_streak: int
+    coaching_note: str
+
+
+class NoteUpdate(BaseModel):
+    """Set (trimmed, max 2000 chars) or clear a task note with null."""
+
+    note: str | None = Field(default=None, max_length=2000)
+
+
+class TaskSearchResponse(BaseModel):
+    """Paginated task search results plus the total match count."""
+
+    items: list[TaskResponse]
+    total: int

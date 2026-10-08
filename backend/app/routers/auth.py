@@ -7,10 +7,12 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.deps import get_current_user
 from app.models import (
+    ActivityDay,
     AgentTrace,
     Goal,
     InterviewQuestion,
     InterviewSession,
+    QuizAttempt,
     ReadinessSnapshot,
     ResumeAnalysis,
     ReviewItem,
@@ -18,6 +20,7 @@ from app.models import (
     Submission,
     Task,
     User,
+    UserBadge,
 )
 from app.schemas import (
     ChangePasswordRequest,
@@ -123,6 +126,9 @@ def delete_account(
         db.query(SkillScore).filter(SkillScore.goal_id.in_(goal_ids)).delete(synchronize_session=False)
         db.query(Goal).filter(Goal.id.in_(goal_ids)).delete(synchronize_session=False)
     db.query(ResumeAnalysis).filter(ResumeAnalysis.user_id == user.id).delete(synchronize_session=False)
+    db.query(QuizAttempt).filter(QuizAttempt.user_id == user.id).delete(synchronize_session=False)
+    db.query(ActivityDay).filter(ActivityDay.user_id == user.id).delete(synchronize_session=False)
+    db.query(UserBadge).filter(UserBadge.user_id == user.id).delete(synchronize_session=False)
     db.query(ReviewItem).filter(ReviewItem.user_id == user.id).delete(synchronize_session=False)
     db.query(User).filter(User.id == user.id).delete(synchronize_session=False)
     db.commit()

@@ -1,15 +1,36 @@
-# AGENTOS local + Docker setup. No secrets live in this file;
-# backend configuration comes from backend/.env (see backend/.env.example).
+# AGENTOS full stack with dummy values only. Nothing secret lives here.
+# For real deployments, override via environment (see docs/DEPLOY.md).
 services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: agentos
+      POSTGRES_PASSWORD: dummy-postgres-password
+      POSTGRES_DB: agentos
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agentos"]
+      interval: 5s
+      retries: 5
+
   backend:
     build: ./backend
-    env_file: ./backend/.env
     environment:
-      DATABASE_URL: sqlite:////data/agentos.db
-    volumes:
-      - agentos-data:/data
+      ENVIRONMENT: production
+      DATABASE_URL: postgresql+psycopg2://agentos:dummy-postgres-password@db:5432/agentos
+      JWT_SECRET: dummy-jwt-secret-for-local-docker-only-32
+      JWT_EXPIRE_MINUTES: 60
+      CORS_ORIGINS: http://localhost:5173
+      LLM_PROVIDER: groq
+      LLM_MOCK: "true"
+      LLM_CALLS_PER_HOUR: 60
     ports:
       - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
   frontend:
     build:
       context: ./frontend
@@ -20,24 +41,5 @@ services:
     depends_on:
       - backend
 
-  # Optional Postgres. Default profile runs SQLite only; start Postgres with:
-  #   docker compose --profile postgres up --build
-  # then point the backend at it (see docs/ER_DIAGRAM.md + README Docker section):
-  #   DATABASE_URL=postgresql+psycopg2://agentos:agentos@db:5432/agentos
-  db:
-    image: postgres:16-alpine
-    profiles: ["postgres"]
-    environment:
-      POSTGRES_USER: agentos
-      POSTGRES_PASSWORD: agentos
-      POSTGRES_DB: agentos
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U agentos"]
-      interval: 5s
-      retries: 5
-
 volumes:
-  agentos-data:
   pgdata:

@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.deps import get_current_user
 from app.models import Goal, Submission, Task, User
-from app.schemas import ActiveGoalSummary, DashboardResponse, TaskResponse
+from app.schemas import ActiveGoalSummary, DashboardResponse, TaskResponse, to_task_response
 from app.utils.readiness import compute_categories, readiness_from
 
 router = APIRouter(tags=["dashboard"])
@@ -61,8 +61,8 @@ def get_dashboard(db: Session = Depends(get_db), user: User = Depends(get_curren
         )
 
     return DashboardResponse(
-        today_tasks=[TaskResponse.model_validate(t) for t in today_tasks],
-        overdue_tasks=[TaskResponse.model_validate(t) for t in overdue_tasks],
+        today_tasks=[to_task_response(t) for t in today_tasks],
+        overdue_tasks=[to_task_response(t) for t in overdue_tasks],
         overdue_count=len(overdue_tasks),
         completed_this_week=completed_this_week,
         streak_days=_streak(active_days),

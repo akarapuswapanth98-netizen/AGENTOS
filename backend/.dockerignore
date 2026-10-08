@@ -4,3 +4,5 @@
 *.joblib
 __pycache__
 .pytest_cache
+.git
+tests/test_*.db

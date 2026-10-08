@@ -54,6 +54,17 @@ export const api = {
   getGoalTasks: (goalId, status) =>
     apiClient.get(`/goals/${goalId}/tasks`, { params: status && status !== 'all' ? { status } : {} }).then((r) => r.data),
   getProgress: (goalId) => apiClient.get(`/goals/${goalId}/progress`).then((r) => r.data),
+  // --- quizzes ---
+  startQuiz: (skill, goal_id) => apiClient.post('/quizzes/start', { skill, goal_id }).then((r) => r.data),
+  answerQuiz: (id, answers) => apiClient.post(`/quizzes/${id}/submit`, { answers }).then((r) => r.data),
+  getQuizHistory: () => apiClient.get('/quizzes/history').then((r) => r.data),
+  getMyProgress: () => apiClient.get('/me/progress').then((r) => r.data),
+  getWeeklySummary: (week_offset = 0) => apiClient.get('/me/weekly-summary', { params: { week_offset } }).then((r) => r.data),
+  downloadWeeklyPdf: (week_offset = 0) =>
+    apiClient.get('/me/weekly-summary/pdf', { params: { week_offset }, responseType: 'blob' }).then((r) => r.data),
+  downloadCareerPdf: (goal_id) =>
+    apiClient.get('/reports/career/pdf', { params: goal_id ? { goal_id } : {}, responseType: 'blob' }).then((r) => r.data),
+  getQuiz: (id) => apiClient.get(`/quizzes/${id}`).then((r) => r.data),
   // --- resume ---
   analyzeResume: (file, goalId) => {
     const form = new FormData()
@@ -68,8 +79,11 @@ export const api = {
   answerReview: (itemId, question_text, answer_text) =>
     apiClient.post(`/reviews/${itemId}/answer`, { question_text, answer_text }).then((r) => r.data),
   // --- tasks ---
+  searchTasks: (params) => apiClient.get('/tasks/search', { params }).then((r) => r.data),
   getTask: (id) => apiClient.get(`/tasks/${id}`).then((r) => r.data),
   updateTaskStatus: (id, status) => apiClient.patch(`/tasks/${id}/status`, { status }).then((r) => r.data),
+  updateTaskDueDate: (id, due_date) => apiClient.patch(`/tasks/${id}/due-date`, { due_date }).then((r) => r.data),
+  updateTaskNote: (id, note) => apiClient.put(`/tasks/${id}/note`, { note }).then((r) => r.data),
   getTutor: (id) => apiClient.post(`/tasks/${id}/tutor`).then((r) => r.data),
   submitAnswer: (id, answer_text) => apiClient.post(`/tasks/${id}/submit`, { answer_text }).then((r) => r.data),
   getSubmissions: (id) => apiClient.get(`/tasks/${id}/submissions`).then((r) => r.data),
