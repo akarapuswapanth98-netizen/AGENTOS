@@ -12,11 +12,17 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('agentos_token')
   if (token) config.headers.Authorization = `Bearer ${token}`
-  // File uploads (resume) send FormData. A Content-Type of application/json here
-  // makes axios JSON-stringify the form, so the backend never sees the file part.
-  // Dropping the header lets the browser add the multipart boundary itself.
+  // File uploads (resume) send FormData, so no Content-Type may be set here:
+  //  - application/json makes axios JSON-stringify the form, so the backend
+  //    never sees the file part;
+  //  - axios 1.20.0 re-adds application/x-www-form-urlencoded to every
+  //    post/put/patch whose Content-Type is missing (dispatchRequest), and the
+  //    browser then sends that instead of the multipart boundary.
+  // setContentType(false) marks the header as "remove me": axios keeps the
+  // marker, never overwrites it, and drops it before calling setRequestHeader,
+  // so the browser generates multipart/form-data; boundary=... itself.
   if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
-    config.headers.delete('Content-Type')
+    config.headers.setContentType(false)
   }
   return config
 })

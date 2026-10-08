@@ -28,8 +28,9 @@ Open the browser devtools Network tab and filter by `resume`, `search`,
 ## BUG-01 (High) - resume upload
 
 - [ ] Resume page -> choose a `.txt` file -> **Analyze resume**.
-      Network: `POST /resume/analyze` is `multipart/form-data`, part name
-      `file`, **no** `Content-Type` in the request headers list.
+      Network: `POST /resume/analyze`, part name `file`, and the request
+      `Content-Type` must be **`multipart/form-data; boundary=...`**
+      (not `application/x-www-form-urlencoded`, not `application/json`).
       Response `200`, results panel shows score, skills, gaps, feedback.
 - [ ] Analyze a second file right away. Response `200` again (this used to be
       `422 Field required` from the UI).
