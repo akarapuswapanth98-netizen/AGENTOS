@@ -51,6 +51,7 @@ class TaskResponse(BaseModel):
     attempts: int
     due_date: datetime | None = None
     completed_at: datetime | None = None
+    note: str | None = None
     created_at: datetime
     is_overdue: bool = False
     days_overdue: int = 0
@@ -532,3 +533,16 @@ class OverdueResponse(BaseModel):
 
     items: list[TaskResponse]
     count: int
+
+
+class NoteUpdate(BaseModel):
+    """Set (trimmed, max 2000 chars) or clear a task note with null."""
+
+    note: str | None = Field(default=None, max_length=2000)
+
+
+class TaskSearchResponse(BaseModel):
+    """Paginated task search results plus the total match count."""
+
+    items: list[TaskResponse]
+    total: int

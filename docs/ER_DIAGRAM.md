@@ -57,6 +57,7 @@ erDiagram
         int attempts
         datetime due_date
         datetime completed_at
+        text note
         datetime created_at
     }
     submissions {

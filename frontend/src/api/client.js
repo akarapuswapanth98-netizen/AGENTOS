@@ -74,9 +74,11 @@ export const api = {
   answerReview: (itemId, question_text, answer_text) =>
     apiClient.post(`/reviews/${itemId}/answer`, { question_text, answer_text }).then((r) => r.data),
   // --- tasks ---
+  searchTasks: (params) => apiClient.get('/tasks/search', { params }).then((r) => r.data),
   getTask: (id) => apiClient.get(`/tasks/${id}`).then((r) => r.data),
   updateTaskStatus: (id, status) => apiClient.patch(`/tasks/${id}/status`, { status }).then((r) => r.data),
   updateTaskDueDate: (id, due_date) => apiClient.patch(`/tasks/${id}/due-date`, { due_date }).then((r) => r.data),
+  updateTaskNote: (id, note) => apiClient.put(`/tasks/${id}/note`, { note }).then((r) => r.data),
   getTutor: (id) => apiClient.post(`/tasks/${id}/tutor`).then((r) => r.data),
   submitAnswer: (id, answer_text) => apiClient.post(`/tasks/${id}/submit`, { answer_text }).then((r) => r.data),
   getSubmissions: (id) => apiClient.get(`/tasks/${id}/submissions`).then((r) => r.data),

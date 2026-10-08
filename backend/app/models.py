@@ -65,6 +65,7 @@ class Task(Base):
     attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     due_date: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, nullable=False)
 
 

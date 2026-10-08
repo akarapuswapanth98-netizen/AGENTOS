@@ -1,21 +1,24 @@
 """Task endpoints: detail, status update, tutor, submit (validator + adaptive), history."""
 import logging
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import nulls_last, or_
 from sqlalchemy.orm import Session
 
 from app.agents.tutor import run_tutor
 from app.agents.validator import run_validator
 from app.database import get_db
-from app.deps import get_current_user, get_owned_task
-from app.models import AgentTrace, SkillScore, Submission, Task, User
+from app.deps import get_current_user, get_owned_goal, get_owned_task
+from app.models import AgentTrace, Goal, SkillScore, Submission, Task, User
 from app.schemas import (
     DueDateUpdate,
+    NoteUpdate,
     SubmissionResponse,
     SubmitRequest,
     SubmitResponse,
     TaskResponse,
+    TaskSearchResponse,
     TaskStatusUpdate,
     TutorResponse,
     to_task_response,
@@ -30,6 +33,50 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
 PASS_SCORE = 60
+
+
+def _escape_like(text: str) -> str:
+    """Escape LIKE wildcards so % and _ match literally (backslash-escaped)."""
+    return text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
+@router.get("/search", response_model=TaskSearchResponse)
+def search_tasks(
+    q: str = Query(default="", max_length=200),
+    status: str | None = Query(default=None),
+    skill: str | None = Query(default=None),
+    overdue: bool | None = Query(default=None),
+    goal_id: int | None = Query(default=None),
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> TaskSearchResponse:
+    """Search the caller's tasks. All filters combine with AND, stable order."""
+    if status is not None and status not in ("pending", "in_progress", "completed"):
+        raise HTTPException(status_code=422, detail="Invalid status filter")
+    if goal_id is not None:
+        get_owned_goal(db, goal_id, user.id)
+    query = db.query(Task).join(Goal, Goal.id == Task.goal_id).filter(Goal.user_id == user.id)
+    if goal_id is not None:
+        query = query.filter(Task.goal_id == goal_id)
+    if q.strip():
+        like = f"%{_escape_like(q.strip())}%"
+        query = query.filter(or_(Task.title.ilike(like, escape="\\"),
+                                 Task.description.ilike(like, escape="\\"),
+                                 Task.note.ilike(like, escape="\\")))
+    if status is not None:
+        query = query.filter(Task.status == status)
+    if skill:
+        query = query.filter(Task.skill == skill)
+    if overdue is not None:
+        day_start = datetime.combine(date.today(), time.min)
+        is_late = (Task.due_date.is_not(None) & (Task.due_date < day_start)
+                   & (Task.status != "completed"))
+        query = query.filter(is_late if overdue else ~is_late)
+    total = query.count()
+    rows = query.order_by(nulls_last(Task.due_date), Task.id).offset(offset).limit(limit).all()
+    return TaskSearchResponse(items=[to_task_response(r) for r in rows], total=total)
 
 
 @router.get("/{task_id}", response_model=TaskResponse)
@@ -72,6 +119,25 @@ def update_task_due_date(
     db.add(task)
     db.commit()
     db.refresh(task)
+    return to_task_response(task)
+
+
+@router.put("/{task_id}/note", response_model=TaskResponse)
+def update_task_note(
+    task_id: int,
+    payload: NoteUpdate,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> TaskResponse:
+    """Save (trimmed) or clear a task note. Notes never reach the LLM."""
+    task, _ = get_owned_task(db, task_id, user.id)
+    task.note = payload.note.strip() if payload.note else None
+    if task.note == "":
+        task.note = None
+    db.add(task)
+    db.commit()
+    db.refresh(task)
+    logger.info("Note updated task_id=%s", task_id)
     return to_task_response(task)
 
 

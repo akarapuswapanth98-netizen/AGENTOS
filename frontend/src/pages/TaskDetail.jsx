@@ -21,6 +21,8 @@ export default function TaskDetail() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [dueInput, setDueInput] = useState('')
+  const [noteInput, setNoteInput] = useState('')
+  const [noteState, setNoteState] = useState('idle')  // idle | saving | saved | error
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -30,6 +32,8 @@ export default function TaskDetail() {
       setTask(t)
       setHistory(h)
       setDueInput(t.due_date ? t.due_date.slice(0, 10) : '')
+      setNoteInput(t.note || '')
+      setNoteState('idle')
     } catch (err) {
       setError(getErrorMessage(err, 'Could not load task'))
     } finally {
@@ -37,8 +41,7 @@ export default function TaskDetail() {
     }
   }, [id])
 
-  async function saveDueDate(value) {
-    setError('')
+  async function saveDueDate(value) {    setError('')
     try {
       const updated = await api.updateTaskDueDate(id, value || null)
       setTask(updated)
@@ -58,6 +61,27 @@ export default function TaskDetail() {
 
   function clearDueDate() {
     saveDueDate(null)
+  }
+
+  async function saveNote() {
+    if (noteInput.length > 2000) {
+      setNoteState('error')
+      return
+    }
+    setNoteState('saving')
+    setError('')
+    try {
+      const updated = await api.updateTaskNote(id, noteInput.trim() ? noteInput : null)
+      setTask(updated)
+      setNoteInput(updated.note || '')
+      setNoteState('saved')
+      toast.success('Note saved')
+    } catch (err) {
+      const msg = getErrorMessage(err, 'Could not save note')
+      setError(msg)
+      setNoteState('error')
+      toast.error(msg)
+    }
   }
 
   useEffect(() => { load() }, [load])
@@ -122,6 +146,21 @@ export default function TaskDetail() {
             <button type="button" onClick={clearDueDate} className="rounded-lg px-3 py-1 text-xs font-semibold text-red-600 hover:bg-red-50">Clear</button>
           )}
         </form>
+        <div className="mt-3">
+          <label className="text-xs text-slate-500">Private note (plain text, never sent to the AI)</label>
+          <textarea value={noteInput} onChange={(e) => { setNoteInput(e.target.value); setNoteState('idle') }} rows={3} maxLength={2000}
+            placeholder="Anything you want to remember about this task…"
+            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none" />
+          <div className="mt-1 flex items-center gap-2">
+            <button onClick={saveNote} disabled={noteState === 'saving'}
+              className="rounded-lg bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-200 disabled:opacity-60">
+              {noteState === 'saving' ? 'Saving…' : 'Save note'}
+            </button>
+            <span className="text-xs text-slate-400">{noteInput.length}/2000</span>
+            {noteState === 'saved' && <span className="text-xs font-medium text-green-600">Saved</span>}
+            {noteState === 'error' && <span className="text-xs font-medium text-red-600">Could not save</span>}
+          </div>
+        </div>
       </div>
 
       <div className="rounded-xl bg-white p-5 shadow-sm">
