@@ -244,6 +244,9 @@ export default function GoalDetail() {
         {searchActive && !searching && (
           <p className="mt-2 text-xs text-slate-500">{searchTotal} match{searchTotal === 1 ? '' : 'es'}{filterLabel ? ` for ${filterLabel}` : ''}</p>
         )}
+        {searchActive && !searching && statusParam === 'completed' && overdueParam && (
+          <p className="mt-1 text-xs text-slate-400">No overdue tasks are completed - pick another status chip.</p>
+        )}
       </div>
 
       <div>
