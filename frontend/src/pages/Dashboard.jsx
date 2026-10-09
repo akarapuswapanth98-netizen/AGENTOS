@@ -1,15 +1,20 @@
-import { useCallback, useEffect, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { api, getErrorMessage } from '../api/client.js'
 import AgentTrace from '../components/AgentTrace.jsx'
+import CountUp from '../components/CountUp.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import ErrorBanner from '../components/ErrorBanner.jsx'
 import GoalForm from '../components/GoalForm.jsx'
 import Loader from '../components/Loader.jsx'
 import ReadinessChart from '../components/ReadinessChart.jsx'
+import Reveal from '../components/Reveal.jsx'
 import Skeleton from '../components/Skeleton.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
+
+// Code-split: three.js only downloads when the dashboard hero renders.
+const Hero3D = lazy(() => import('../components/Hero3D.jsx'))
 
 // Fake pipeline steps shown while POST /goals is in flight (takes seconds).
 const BUILD_STEPS = ['Orchestrator', 'Analyst', 'Planner', 'Validator', 'Saved']
@@ -133,9 +138,31 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">{greeting()}{user ? `, ${user.name}` : ''}</h1>
-        <p className="text-sm text-slate-500">Here is where your career prep stands today.</p>
+      <div className="relative overflow-hidden rounded-2xl bg-slate-900 text-white shadow-sm">
+        <div className="animate-drift pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-indigo-600/40 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-28 right-40 h-64 w-64 rounded-full bg-violet-500/30 blur-3xl" />
+        <div className="relative grid gap-2 p-6 sm:grid-cols-[1fr_240px] sm:p-8">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-indigo-300">AI career planner</p>
+            <h1 className="mt-1 text-2xl font-bold sm:text-3xl">{greeting()}{user ? `, ${user.name}` : ''}</h1>
+            <p className="mt-1 text-sm text-slate-300">Here is where your career prep stands today.</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Link to="/review"
+                className="rounded-lg bg-white px-4 py-1.5 text-sm font-semibold text-slate-900 transition hover:bg-indigo-100">
+                Review today →
+              </Link>
+              <Link to="/quiz"
+                className="rounded-lg border border-white/25 px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-white/10">
+                Practice quiz
+              </Link>
+            </div>
+          </div>
+          <div className="relative hidden min-h-[190px] sm:block">
+            <Suspense fallback={null}>
+              <Hero3D className="absolute inset-0 h-full w-full" />
+            </Suspense>
+          </div>
+        </div>
       </div>
 
       <ErrorBanner message={error} onRetry={() => load()} />
@@ -143,46 +170,56 @@ export default function Dashboard() {
       {loading ? <Loader label="Loading dashboard…" /> : dash && (
         <>
           <div className="grid gap-3 sm:grid-cols-4">
-            <div className="rounded-xl bg-white p-4 shadow-sm">
-              <p className="text-xs text-slate-500">Readiness</p>
-              <p className="text-2xl font-bold text-indigo-600">{dash.active_goal ? dash.active_goal.readiness_score : '—'}</p>
-              {dash.active_goal && <Link to={`/goals/${dash.active_goal.id}`} className="text-xs font-medium text-indigo-600 hover:underline">{dash.active_goal.title}</Link>}
-            </div>
-            <Link to="/review" className="block rounded-xl bg-white p-4 shadow-sm transition hover:shadow-md">
-              <p className="text-xs text-slate-500">Reviews due</p>
-              <p className="text-2xl font-bold text-slate-900">{dueCount ?? '—'}</p>
-              <p className="text-xs font-medium text-indigo-600">Review today →</p>
-            </Link>
-            <div className="rounded-xl bg-white p-4 shadow-sm">
-              <p className="text-xs text-slate-500">Due today</p>
-              <p className="text-2xl font-bold text-slate-900">{dash.today_tasks.length}</p>
-            </div>
-            {(() => {
-              // Only link somewhere useful: a goal's overdue list when there is
-              // one, otherwise a plain card (never a link back to this page).
-              const overdueBody = (
-                <>
-                  <p className="text-xs text-slate-500">Overdue {dash.overdue_count > 0 && <span className="ml-1 rounded-full bg-red-100 px-2 py-0.5 font-semibold text-red-700">{dash.overdue_count}</span>}</p>
-                  <p className="text-2xl font-bold text-slate-900">{dash.overdue_count}</p>
-                  {dash.overdue_tasks.length > 0
-                    ? <p className="text-xs font-medium text-indigo-600">View overdue →</p>
-                    : <p className="text-xs text-slate-400">Nothing overdue</p>}
-                </>
-              )
-              return dash.overdue_tasks.length > 0 ? (
-                <Link to={`/goals/${dash.overdue_tasks[0].goal_id}?filter=overdue`}
-                  className="block rounded-xl bg-white p-4 shadow-sm transition hover:shadow-md">
-                  {overdueBody}
-                </Link>
-              ) : (
-                <div className="rounded-xl bg-white p-4 shadow-sm">{overdueBody}</div>
-              )
-            })()}
-            <div className="rounded-xl bg-white p-4 shadow-sm">
-              <p className="text-xs text-slate-500">Streak</p>
-              <p className="text-2xl font-bold text-slate-900">🔥 {myProgress ? myProgress.current_streak : '—'}d</p>
-              <p className="text-xs text-slate-400">{dash.completed_this_week} done this week</p>
-            </div>
+            <Reveal delay={0}>
+              <div className="h-full rounded-xl bg-white p-4 shadow-sm">
+                <p className="text-xs text-slate-500">Readiness</p>
+                <p className="text-2xl font-bold text-indigo-600">{dash.active_goal ? <CountUp value={dash.active_goal.readiness_score} /> : '—'}</p>
+                {dash.active_goal && <Link to={`/goals/${dash.active_goal.id}`} className="text-xs font-medium text-indigo-600 hover:underline">{dash.active_goal.title}</Link>}
+              </div>
+            </Reveal>
+            <Reveal delay={0.06}>
+              <Link to="/review" className="block h-full rounded-xl bg-white p-4 shadow-sm transition hover:shadow-md">
+                <p className="text-xs text-slate-500">Reviews due</p>
+                <p className="text-2xl font-bold text-slate-900">{dueCount ?? '—'}</p>
+                <p className="text-xs font-medium text-indigo-600">Review today →</p>
+              </Link>
+            </Reveal>
+            <Reveal delay={0.12}>
+              <div className="h-full rounded-xl bg-white p-4 shadow-sm">
+                <p className="text-xs text-slate-500">Due today</p>
+                <p className="text-2xl font-bold text-slate-900"><CountUp value={dash.today_tasks.length} /></p>
+              </div>
+            </Reveal>
+            <Reveal delay={0.18}>
+              {(() => {
+                // Only link somewhere useful: a goal's overdue list when there is
+                // one, otherwise a plain card (never a link back to this page).
+                const overdueBody = (
+                  <>
+                    <p className="text-xs text-slate-500">Overdue {dash.overdue_count > 0 && <span className="ml-1 rounded-full bg-red-100 px-2 py-0.5 font-semibold text-red-700">{dash.overdue_count}</span>}</p>
+                    <p className="text-2xl font-bold text-slate-900"><CountUp value={dash.overdue_count} /></p>
+                    {dash.overdue_tasks.length > 0
+                      ? <p className="text-xs font-medium text-indigo-600">View overdue →</p>
+                      : <p className="text-xs text-slate-400">Nothing overdue</p>}
+                  </>
+                )
+                return dash.overdue_tasks.length > 0 ? (
+                  <Link to={`/goals/${dash.overdue_tasks[0].goal_id}?filter=overdue`}
+                    className="block h-full rounded-xl bg-white p-4 shadow-sm transition hover:shadow-md">
+                    {overdueBody}
+                  </Link>
+                ) : (
+                  <div className="h-full rounded-xl bg-white p-4 shadow-sm">{overdueBody}</div>
+                )
+              })()}
+            </Reveal>
+            <Reveal delay={0.24}>
+              <div className="h-full rounded-xl bg-white p-4 shadow-sm">
+                <p className="text-xs text-slate-500">Streak</p>
+                <p className="text-2xl font-bold text-slate-900">🔥 {myProgress ? <><CountUp value={myProgress.current_streak} />d</> : '—'}</p>
+                <p className="text-xs text-slate-400">{dash.completed_this_week} done this week</p>
+              </div>
+            </Reveal>
           </div>
 
           {myProgress && (

@@ -1,5 +1,7 @@
-import { Route, Routes } from 'react-router-dom'
+import { Route, Routes, useLocation } from 'react-router-dom'
+import { AnimatePresence } from 'framer-motion'
 import Layout from './components/Layout.jsx'
+import PageFade from './components/PageFade.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
 import { ToastProvider } from './context/ToastContext.jsx'
@@ -18,28 +20,39 @@ import Settings from './pages/Settings.jsx'
 import TaskDetail from './pages/TaskDetail.jsx'
 import Weekly from './pages/Weekly.jsx'
 
+// Every route fades through the same transition. Keyed by pathname so the old
+// page exits before the new one enters; skipped entirely on first load.
+function AnimatedRoutes() {
+  const location = useLocation()
+  return (
+    <AnimatePresence mode="wait" initial={false}>
+      <Routes location={location} key={location.pathname}>
+        <Route path="/login" element={<PageFade><Login /></PageFade>} />
+        <Route path="/register" element={<PageFade><Register /></PageFade>} />
+        <Route path="/" element={<PageFade><ProtectedRoute><Dashboard /></ProtectedRoute></PageFade>} />
+        <Route path="/goals/:id" element={<PageFade><ProtectedRoute><GoalDetail /></ProtectedRoute></PageFade>} />
+        <Route path="/goals/:id/report" element={<PageFade><ProtectedRoute><Report /></ProtectedRoute></PageFade>} />
+        <Route path="/tasks/:id" element={<PageFade><ProtectedRoute><TaskDetail /></ProtectedRoute></PageFade>} />
+        <Route path="/interviews" element={<PageFade><ProtectedRoute><Interviews /></ProtectedRoute></PageFade>} />
+        <Route path="/interviews/:id" element={<PageFade><ProtectedRoute><InterviewRunner /></ProtectedRoute></PageFade>} />
+        <Route path="/resume" element={<PageFade><ProtectedRoute><Resume /></ProtectedRoute></PageFade>} />
+        <Route path="/review" element={<PageFade><ProtectedRoute><Review /></ProtectedRoute></PageFade>} />
+        <Route path="/quiz" element={<PageFade><ProtectedRoute><Quiz /></ProtectedRoute></PageFade>} />
+        <Route path="/weekly" element={<PageFade><ProtectedRoute><Weekly /></ProtectedRoute></PageFade>} />
+        <Route path="/settings" element={<PageFade><ProtectedRoute><Settings /></ProtectedRoute></PageFade>} />
+        <Route path="*" element={<PageFade><NotFound /></PageFade>} />
+      </Routes>
+    </AnimatePresence>
+  )
+}
+
 // Public auth pages + protected app pages. Layout wraps everything.
 export default function App() {
   return (
     <AuthProvider>
       <ToastProvider>
         <Layout>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/goals/:id" element={<ProtectedRoute><GoalDetail /></ProtectedRoute>} />
-            <Route path="/goals/:id/report" element={<ProtectedRoute><Report /></ProtectedRoute>} />
-            <Route path="/tasks/:id" element={<ProtectedRoute><TaskDetail /></ProtectedRoute>} />
-            <Route path="/interviews" element={<ProtectedRoute><Interviews /></ProtectedRoute>} />
-            <Route path="/interviews/:id" element={<ProtectedRoute><InterviewRunner /></ProtectedRoute>} />
-          <Route path="/resume" element={<ProtectedRoute><Resume /></ProtectedRoute>} />
-            <Route path="/review" element={<ProtectedRoute><Review /></ProtectedRoute>} />
-            <Route path="/quiz" element={<ProtectedRoute><Quiz /></ProtectedRoute>} />
-            <Route path="/weekly" element={<ProtectedRoute><Weekly /></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <AnimatedRoutes />
         </Layout>
       </ToastProvider>
     </AuthProvider>
