@@ -6,6 +6,30 @@ body {
   @apply bg-slate-100 text-slate-800 antialiased;
 }
 
+::selection {
+  @apply bg-indigo-600 text-white;
+}
+
+/* Frosted-glass surface for overlays and hero panels. */
+.glass {
+  @apply border border-white/40 bg-white/70 shadow-sm backdrop-blur;
+}
+
+/* Slow ambient drift for decorative glow blobs (see Dashboard hero). */
+@keyframes drift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(4%, -6%, 0) scale(1.08); }
+}
+.animate-drift {
+  animation: drift 14s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-drift {
+    animation: none;
+  }
+}
+
 /* Print: only the report card, no nav/sidebar/buttons. */
 @media print {
   header,

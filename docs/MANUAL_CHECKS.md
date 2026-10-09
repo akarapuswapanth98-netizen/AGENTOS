@@ -126,7 +126,6 @@ Open the browser devtools Network tab and filter by `resume`, `search`,
 - [ ] Same for **Clear**.
 
 ## Goal edit save (NEW-07)
-
 - [ ] Goal detail -> **Edit goal**, then hammer **Save changes**. The button
       shows "Saving..." and is disabled until the request returns; the edit
       form closes on success, as before.
@@ -142,3 +141,18 @@ records them so nobody re-adds a wrapper for them by accident:
 - `GET /me/overdue` - the dashboard reads overdue counts from `/dashboard`.
 - `GET /resume/latest` - the Resume page only shows the result it just fetched.
 - `GET /quizzes/{attempt_id}` - the quiz page keeps its attempt in memory.
+
+## UI motion upgrade (3D hero + transitions)
+
+- [ ] Dashboard (desktop) - a dark hero panel shows the greeting, two buttons,
+      and a slowly rotating 3D crystal with a starfield on the right. On mobile
+      the 3D canvas is hidden and the panel still reads fine.
+- [ ] Dashboard numbers (readiness, due today, overdue, streak) count up once
+      on load; later background refreshes update silently without replaying.
+- [ ] Click through Dashboard, GoalDetail, Quiz, Review - each page fades in
+      with a small rise; no flash of unstyled content, no layout jump.
+- [ ] Stat cards and sections reveal with a slight stagger while scrolling.
+- [ ] DevTools Network - the `Hero3D-*.js` chunk (~880 KB) loads only on the
+      dashboard, never on login or other pages.
+- [ ] OS "reduce motion" ON - no 3D canvas (static gradient instead), no
+      count-up, no transitions; everything is immediately readable.
