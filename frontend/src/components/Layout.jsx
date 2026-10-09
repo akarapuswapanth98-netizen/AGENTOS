@@ -7,7 +7,7 @@ export default function Layout({ children }) {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const linkCls = (active) =>
-    `block rounded-lg px-3 py-2 text-sm font-medium ${active ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-200'}`
+    `block rounded-lg px-3 py-2 text-sm font-medium transition-colors ${active ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-200'}`
 
   function handleLogout() {
     logout()
@@ -20,7 +20,7 @@ export default function Layout({ children }) {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
           <Link to="/" className="flex items-center gap-2">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 font-bold text-white">A</span>
-            <span className="text-lg font-bold tracking-tight text-slate-900">AGENTOS</span>
+            <span className="gradient-text text-lg font-bold tracking-tight">AGENTOS</span>
           </Link>
           <div className="flex items-center gap-3">
             {user && (

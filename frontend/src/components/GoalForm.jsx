@@ -45,7 +45,7 @@ export default function GoalForm({ onSubmit, submitting, initialSkills = '' }) {
       <button
         type="submit"
         disabled={submitting}
-        className="w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+        className="btn-shine w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {submitting ? 'Generating plan…' : 'Generate plan'}
       </button>

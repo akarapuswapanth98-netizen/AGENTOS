@@ -148,11 +148,11 @@ export default function Dashboard() {
             <p className="mt-1 text-sm text-slate-300">Here is where your career prep stands today.</p>
             <div className="mt-4 flex flex-wrap gap-2">
               <Link to="/review"
-                className="rounded-lg bg-white px-4 py-1.5 text-sm font-semibold text-slate-900 transition hover:bg-indigo-100">
+                className="btn-shine rounded-lg bg-white px-4 py-1.5 text-sm font-semibold text-slate-900 transition hover:bg-indigo-100">
                 Review today →
               </Link>
               <Link to="/quiz"
-                className="rounded-lg border border-white/25 px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-white/10">
+                className="btn-shine rounded-lg border border-white/25 px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-white/10">
                 Practice quiz
               </Link>
             </div>
@@ -226,9 +226,10 @@ export default function Dashboard() {
             <div className="rounded-xl bg-white p-5 shadow-sm">
               <h2 className="text-base font-semibold text-slate-900">Badges</h2>
               <div className="mt-2 flex flex-wrap gap-2">
-                {myProgress.earned.map((b) => (
-                  <span key={b.badge} title={`Earned ${new Date(b.awarded_at).toLocaleDateString()}`}
-                    className="rounded-full bg-indigo-600 px-3 py-1 text-xs font-semibold text-white">🏅 {b.badge}</span>
+                {myProgress.earned.map((b, i) => (
+                  <span key={b.badge} style={{ '--pop-delay': `${Math.min(i, 8) * 60}ms` }}
+                    title={`Earned ${new Date(b.awarded_at).toLocaleDateString()}`}
+                    className="pop-in rounded-full bg-indigo-600 px-3 py-1 text-xs font-semibold text-white">🏅 {b.badge}</span>
                 ))}
                 {myProgress.locked.map((b) => (
                   <span key={b.badge} title={b.hint}
@@ -291,7 +292,7 @@ export default function Dashboard() {
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
             {goals.map((g) => (
-              <div key={g.id} className="rounded-xl bg-white p-4 shadow-sm">
+              <div key={g.id} className="card-lift rounded-xl bg-white p-4 shadow-sm">
                 <Link to={`/goals/${g.id}`} className="font-medium text-slate-900 hover:text-indigo-600">{g.title}</Link>
                 <p className="mt-1 text-sm text-slate-500">{g.target_role} · {g.timeline_days} days</p>
                 <p className="text-xs text-slate-400">Created {new Date(g.created_at).toLocaleDateString()}</p>

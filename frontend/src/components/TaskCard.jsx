@@ -16,7 +16,7 @@ const STATUS_STYLES = {
 // One task row: title, badges, skill, score, attempts. Links to /tasks/:id.
 export default function TaskCard({ task }) {
   return (
-    <Link to={`/tasks/${task.id}`} className="block rounded-xl bg-white p-4 shadow-sm transition hover:shadow-md">
+    <Link to={`/tasks/${task.id}`} className="card-lift block rounded-xl bg-white p-4 shadow-sm transition hover:shadow-md">
       <div className="flex flex-wrap items-center gap-2">
         <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${TYPE_STYLES[task.task_type] || 'bg-slate-100 text-slate-600'}`}>
           {task.task_type}

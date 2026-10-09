@@ -15,6 +15,109 @@ body {
   @apply border border-white/40 bg-white/70 shadow-sm backdrop-blur;
 }
 
+/* ---- Motion pack (pure CSS, GPU-friendly transforms/opacity only) ---- */
+
+/* Shimmer sweep for skeleton bars. */
+.skeleton-shimmer {
+  background: linear-gradient(100deg, #e2e8f0 30%, #f1f5f9 50%, #e2e8f0 70%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+/* Orbiting dots loader. */
+.loader-dot {
+  animation: loader-bounce 1.1s ease-in-out infinite;
+}
+@keyframes loader-bounce {
+  0%, 100% { transform: translateY(0); opacity: 0.45; }
+  50% { transform: translateY(-5px); opacity: 1; }
+}
+
+/* Toast entry: slide up + fade. */
+.toast-in {
+  animation: toast-in 0.28s cubic-bezier(0.21, 1.02, 0.73, 1) both;
+}
+@keyframes toast-in {
+  from { transform: translateY(12px) scale(0.97); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* Shine sweep across primary buttons on hover. */
+.btn-shine {
+  position: relative;
+  overflow: hidden;
+}
+.btn-shine::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -80%;
+  height: 100%;
+  width: 55%;
+  transform: skewX(-20deg);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transition: left 0.55s ease;
+  pointer-events: none;
+}
+.btn-shine:hover::after {
+  left: 130%;
+}
+
+/* Card hover lift. */
+.card-lift {
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+.card-lift:hover {
+  transform: translateY(-3px);
+}
+
+/* Animated gradient text for brand accents. */
+.gradient-text {
+  background: linear-gradient(90deg, #818cf8, #4f46e5, #a78bfa, #818cf8);
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradient-pan 6s linear infinite;
+}
+@keyframes gradient-pan {
+  to { background-position: 220% center; }
+}
+
+/* Diagonal stripes drifting across progress fills. */
+.progress-stripes {
+  position: relative;
+  overflow: hidden;
+}
+.progress-stripes::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    -55deg,
+    rgba(255, 255, 255, 0.28) 0 8px,
+    transparent 8px 16px
+  );
+  animation: stripes-slide 1.4s linear infinite;
+}
+@keyframes stripes-slide {
+  to { transform: translateX(22px); }
+}
+
+/* Pop-in for badges and chips. Honors --pop-delay for stagger. */
+.pop-in {
+  animation: pop-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: var(--pop-delay, 0ms);
+}
+@keyframes pop-in {
+  from { transform: scale(0.6); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
 /* Slow ambient drift for decorative glow blobs (see Dashboard hero). */
 @keyframes drift {
   0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
@@ -25,8 +128,20 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-drift {
+  .animate-drift,
+  .skeleton-shimmer,
+  .loader-dot,
+  .toast-in,
+  .gradient-text,
+  .pop-in {
     animation: none;
+  }
+  .progress-stripes::before,
+  .btn-shine::after {
+    display: none;
+  }
+  .card-lift:hover {
+    transform: none;
   }
 }
 
