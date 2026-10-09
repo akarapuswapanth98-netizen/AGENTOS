@@ -34,7 +34,7 @@ export function ToastProvider({ children }) {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`pointer-events-auto flex items-start justify-between gap-2 rounded-xl p-3 text-sm shadow-lg ${
+            className={`toast-in pointer-events-auto flex items-start justify-between gap-2 rounded-xl p-3 text-sm shadow-lg ${
               t.kind === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
             }`}
           >

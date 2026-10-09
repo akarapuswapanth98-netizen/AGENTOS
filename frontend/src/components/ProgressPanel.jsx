@@ -3,7 +3,7 @@ export default function ProgressPanel({ progress }) {
   if (!progress) return null
   const bar = (pct, color) => (
     <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
-      <div className={`h-2 rounded-full ${color}`} style={{ width: `${Math.min(100, Math.max(0, pct))}%` }} />
+      <div className={`progress-stripes h-2 rounded-full ${color}`} style={{ width: `${Math.min(100, Math.max(0, pct))}%` }} />
     </div>
   )
 
