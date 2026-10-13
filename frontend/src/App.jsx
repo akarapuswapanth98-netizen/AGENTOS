@@ -5,6 +5,7 @@ import PageFade from './components/PageFade.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
 import { ToastProvider } from './context/ToastContext.jsx'
+import { SoundProvider } from './context/SoundContext.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import GoalDetail from './pages/GoalDetail.jsx'
 import InterviewRunner from './pages/InterviewRunner.jsx'
@@ -65,9 +66,11 @@ export default function App() {
   return (
     <AuthProvider>
       <ToastProvider>
-        <Layout>
-          <AnimatedRoutes />
-        </Layout>
+        <SoundProvider>
+          <Layout>
+            <AnimatedRoutes />
+          </Layout>
+        </SoundProvider>
       </ToastProvider>
     </AuthProvider>
   )

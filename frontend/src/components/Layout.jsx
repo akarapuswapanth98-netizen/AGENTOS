@@ -26,12 +26,16 @@ import {
   Clock,
   Share2,
   BarChart3,
+  Volume2,
+  VolumeX,
 } from 'lucide-react'
+import { useSound } from '../context/SoundContext.jsx'
 
 export default function Layout({ children }) {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuth()
+  const { soundEnabled, toggleSound, playClick } = useSound()
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [cmdOpen, setCmdOpen] = useState(false)
@@ -135,6 +139,19 @@ export default function Layout({ children }) {
               </span>
               <span className="font-mono text-[11px] font-medium tracking-wide">CORE ACTIVE</span>
             </div>
+
+            {/* Audio Toggle Button */}
+            <button
+              onClick={toggleSound}
+              title={soundEnabled ? 'Cyber audio enabled (click to mute)' : 'Cyber audio muted (click to unmute)'}
+              className={`p-2 rounded-xl border transition ${
+                soundEnabled
+                  ? 'border-cyan-500/40 bg-cyan-950/40 text-cyan-400 shadow-glow-sm'
+                  : 'border-slate-800 bg-slate-900/60 text-slate-500 hover:text-slate-300'
+              }`}
+            >
+              {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+            </button>
 
             {user ? (
               <div className="flex items-center gap-2.5">

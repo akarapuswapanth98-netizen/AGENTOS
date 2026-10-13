@@ -27,7 +27,12 @@ import {
   ExternalLink,
   ShieldCheck,
   CheckCircle2,
+  Rocket,
+  Share2,
 } from 'lucide-react'
+import MissionLauncher from '../components/MissionLauncher.jsx'
+import ShareableAgentCard from '../components/ShareableAgentCard.jsx'
+import { useSound } from '../context/SoundContext.jsx'
 
 // Code-split: three.js only downloads when the dashboard hero renders.
 const Hero3D = lazy(() => import('../components/Hero3D.jsx'))
@@ -132,6 +137,9 @@ export default function Dashboard() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [deletingId, setDeletingId] = useState(null)
+  const [missionOpen, setMissionOpen] = useState(false)
+  const [shareOpen, setShareOpen] = useState(false)
+  const { playClick } = useSound()
 
   const load = useCallback(async (quiet = false) => {
     if (!quiet) setLoading(true)
@@ -244,6 +252,26 @@ export default function Dashboard() {
                 <Sparkles className="h-4 w-4 text-violet-400" />
                 Practice Quiz
               </Link>
+              <button
+                onClick={() => {
+                  playClick()
+                  setMissionOpen(true)
+                }}
+                className="btn-cyber-primary rounded-xl px-4 py-2 text-sm font-semibold flex items-center gap-2 shadow-glow-sm"
+              >
+                <Rocket className="h-4 w-4 animate-pulse text-cyan-300" />
+                Run Mission
+              </button>
+              <button
+                onClick={() => {
+                  playClick()
+                  setShareOpen(true)
+                }}
+                className="btn-cyber-ghost rounded-xl px-4 py-2 text-sm font-semibold flex items-center gap-2"
+              >
+                <Share2 className="h-4 w-4 text-cyan-400" />
+                Share ID
+              </button>
             </div>
           </div>
 
@@ -608,6 +636,18 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+
+      {/* Warp Speed Mission Launcher Modal */}
+      <MissionLauncher isOpen={missionOpen} onClose={() => setMissionOpen(false)} />
+
+      {/* Shareable Holographic Cyber ID Card Modal */}
+      <ShareableAgentCard
+        isOpen={shareOpen}
+        onClose={() => setShareOpen(false)}
+        user={user}
+        readinessScore={dash?.active_goal?.readiness_score || 84}
+        targetRole={dash?.active_goal?.title || 'Senior Systems Architect'}
+      />
     </div>
   )
 }
