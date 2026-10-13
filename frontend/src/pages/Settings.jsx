@@ -4,8 +4,15 @@ import { api, getErrorMessage } from '../api/client.js'
 import ErrorBanner from '../components/ErrorBanner.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
+import {
+  Settings as SettingsIcon,
+  User,
+  Key,
+  ShieldAlert,
+  Save,
+  Trash2,
+} from 'lucide-react'
 
-// Account settings: rename, change password, delete account (typed confirm).
 export default function Settings() {
   const navigate = useNavigate()
   const { user, setUser, logout } = useAuth()
@@ -18,13 +25,12 @@ export default function Settings() {
   const [delConfirm, setDelConfirm] = useState('')
   const [busy, setBusy] = useState(false)
 
-  // The profile loads after this page renders, so fill the field in once it
-  // arrives. Keyed on the name value, so typing is never overwritten.
   useEffect(() => {
     if (user?.name) setName(user.name)
   }, [user?.name])
 
-  const inputCls = 'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none'
+  const inputCls =
+    'w-full rounded-xl border border-indigo-500/25 bg-[#090d18] px-3.5 py-2.5 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400/40 transition'
 
   async function handleName(e) {
     e.preventDefault()
@@ -32,9 +38,9 @@ export default function Settings() {
     try {
       const updated = await api.updateMe({ name: name.trim() })
       setUser(updated)
-      toast.success('Name updated')
+      toast.success('Agent Architect profile updated')
     } catch (err) {
-      const msg = getErrorMessage(err, 'Could not update name')
+      const msg = getErrorMessage(err, 'Could not update profile name')
       setError(msg)
       toast.error(msg)
     } finally {
@@ -49,9 +55,9 @@ export default function Settings() {
       await api.changePassword({ current_password: currentPw, new_password: newPw })
       setCurrentPw('')
       setNewPw('')
-      toast.success('Password changed')
+      toast.success('Security credentials rotated')
     } catch (err) {
-      const msg = getErrorMessage(err, 'Could not change password')
+      const msg = getErrorMessage(err, 'Could not update password')
       setError(msg)
       toast.error(msg)
     } finally {
@@ -69,7 +75,7 @@ export default function Settings() {
     try {
       await api.deleteAccount(delPw)
       logout()
-      toast.success('Account deleted')
+      toast.success('Account and associated data destroyed')
       navigate('/register')
     } catch (err) {
       const msg = getErrorMessage(err, 'Could not delete account')
@@ -80,34 +86,127 @@ export default function Settings() {
   }
 
   return (
-    <div className="mx-auto max-w-lg space-y-6">
-      <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
+    <div className="mx-auto max-w-xl space-y-6 text-slate-200">
+      <div>
+        <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-white flex items-center gap-2">
+          <SettingsIcon className="h-6 w-6 text-indigo-400" />
+          Operating System Settings
+        </h1>
+        <p className="mt-1 text-xs text-slate-400 font-mono">
+          PROFILE PARAMETERS • CREDENTIAL SECURITY • PURGE CONTROLS
+        </p>
+      </div>
+
       <ErrorBanner message={error} />
 
-      <form onSubmit={handleName} className="space-y-3 rounded-xl bg-white p-5 shadow-sm">
-        <h2 className="text-base font-semibold text-slate-900">Profile</h2>
-        <input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" required />
-        <button disabled={busy} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60">
-          Save name
+      {/* Profile Form */}
+      <form
+        onSubmit={handleName}
+        className="space-y-4 rounded-3xl cyber-glass border border-indigo-500/25 p-6 shadow-glass-panel"
+      >
+        <div className="flex items-center gap-2 border-b border-indigo-500/15 pb-3">
+          <User className="h-4 w-4 text-cyan-400" />
+          <h2 className="font-display text-base font-bold text-white">Agent Architect Identity</h2>
+        </div>
+        <div>
+          <label className="text-xs text-slate-400 block mb-1">Display Name</label>
+          <input
+            className={inputCls}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Your name"
+            required
+          />
+        </div>
+        <button
+          disabled={busy}
+          className="btn-cyber-primary rounded-xl px-4 py-2 text-xs font-semibold flex items-center gap-2 disabled:opacity-50"
+        >
+          <Save className="h-3.5 w-3.5" />
+          Save Identity
         </button>
       </form>
 
-      <form onSubmit={handlePassword} className="space-y-3 rounded-xl bg-white p-5 shadow-sm">
-        <h2 className="text-base font-semibold text-slate-900">Change password</h2>
-        <input className={inputCls} type="password" value={currentPw} onChange={(e) => setCurrentPw(e.target.value)} placeholder="Current password" required />
-        <input className={inputCls} type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)} placeholder="New password (min 8 chars)" minLength={8} required />
-        <button disabled={busy} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60">
-          Change password
+      {/* Password Form */}
+      <form
+        onSubmit={handlePassword}
+        className="space-y-4 rounded-3xl cyber-glass border border-indigo-500/25 p-6 shadow-glass-panel"
+      >
+        <div className="flex items-center gap-2 border-b border-indigo-500/15 pb-3">
+          <Key className="h-4 w-4 text-violet-400" />
+          <h2 className="font-display text-base font-bold text-white">Access Credentials</h2>
+        </div>
+        <div>
+          <label className="text-xs text-slate-400 block mb-1">Current Password</label>
+          <input
+            className={inputCls}
+            type="password"
+            value={currentPw}
+            onChange={(e) => setCurrentPw(e.target.value)}
+            placeholder="Current authentication password"
+            required
+          />
+        </div>
+        <div>
+          <label className="text-xs text-slate-400 block mb-1">New Password (Min 8 characters)</label>
+          <input
+            className={inputCls}
+            type="password"
+            value={newPw}
+            onChange={(e) => setNewPw(e.target.value)}
+            placeholder="New secure password"
+            minLength={8}
+            required
+          />
+        </div>
+        <button
+          disabled={busy}
+          className="btn-cyber-primary rounded-xl px-4 py-2 text-xs font-semibold flex items-center gap-2 disabled:opacity-50"
+        >
+          <Key className="h-3.5 w-3.5" />
+          Rotate Password
         </button>
       </form>
 
-      <form onSubmit={handleDelete} className="space-y-3 rounded-xl border border-red-200 bg-white p-5 shadow-sm">
-        <h2 className="text-base font-semibold text-red-700">Delete account</h2>
-        <p className="text-sm text-slate-500">Removes your account and every goal, task, interview, and score. This cannot be undone.</p>
-        <input className={inputCls} type="password" value={delPw} onChange={(e) => setDelPw(e.target.value)} placeholder="Current password" required />
-        <input className={inputCls} value={delConfirm} onChange={(e) => setDelConfirm(e.target.value)} placeholder='Type DELETE to confirm' required />
-        <button disabled={busy} className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60">
-          Delete my account
+      {/* Danger Zone: Purge Account */}
+      <form
+        onSubmit={handleDelete}
+        className="space-y-4 rounded-3xl border border-red-500/30 bg-red-950/20 p-6 shadow-glass-panel"
+      >
+        <div className="flex items-center gap-2 border-b border-red-500/20 pb-3">
+          <ShieldAlert className="h-5 w-5 text-red-400" />
+          <h2 className="font-display text-base font-bold text-red-400">Purge Agent OS Account</h2>
+        </div>
+        <p className="text-xs text-slate-300 leading-relaxed">
+          Permanently destroys your user account, career blueprints, task submissions, interview logs, and test metrics. This action is irrevocable.
+        </p>
+        <div>
+          <label className="text-xs text-slate-400 block mb-1">Confirm with Password</label>
+          <input
+            className={inputCls}
+            type="password"
+            value={delPw}
+            onChange={(e) => setDelPw(e.target.value)}
+            placeholder="Your password"
+            required
+          />
+        </div>
+        <div>
+          <label className="text-xs text-slate-400 block mb-1">Type DELETE to confirm</label>
+          <input
+            className={inputCls}
+            value={delConfirm}
+            onChange={(e) => setDelConfirm(e.target.value)}
+            placeholder="DELETE"
+            required
+          />
+        </div>
+        <button
+          disabled={busy}
+          className="rounded-xl border border-red-500/50 bg-red-600/80 px-4 py-2 text-xs font-bold text-white hover:bg-red-600 transition flex items-center gap-2 disabled:opacity-50"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+          Purge All Account Data
         </button>
       </form>
     </div>

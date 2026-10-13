@@ -1,53 +1,291 @@
+import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
+import CommandPalette from './CommandPalette.jsx'
+import {
+  LayoutDashboard,
+  BrainCircuit,
+  Activity,
+  Boxes,
+  Users2,
+  FileText,
+  RotateCcw,
+  Sparkles,
+  Calendar,
+  Settings,
+  LogOut,
+  Search,
+  Menu,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  ShieldAlert,
+  Cpu,
+  Radio,
+  Database,
+  Clock,
+  Share2,
+  BarChart3,
+} from 'lucide-react'
 
-// App shell: sidebar on desktop, top bar with user name + logout.
 export default function Layout({ children }) {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuth()
-  const linkCls = (active) =>
-    `block rounded-lg px-3 py-2 text-sm font-medium transition-colors ${active ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-200'}`
+  const [collapsed, setCollapsed] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [cmdOpen, setCmdOpen] = useState(false)
+
+  // Listen for custom open event dispatched from anywhere
+  useEffect(() => {
+    function handleOpen() {
+      setCmdOpen(true)
+    }
+    document.addEventListener('open-command-palette', handleOpen)
+    return () => document.removeEventListener('open-command-palette', handleOpen)
+  }, [])
+
+  // Close mobile drawer on route change
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [pathname])
 
   function handleLogout() {
     logout()
     navigate('/login')
   }
 
+  const navLinks = [
+    { label: 'Dashboard', path: '/', icon: LayoutDashboard },
+    { label: 'Agent Builder', path: '/builder', icon: BrainCircuit, badge: 'NEW' },
+    { label: 'Live Monitoring', path: '/monitoring', icon: Activity, badge: 'LIVE' },
+    { label: 'Analytics', path: '/analytics', icon: BarChart3 },
+    { label: 'Agent Templates', path: '/marketplace', icon: Boxes },
+    { label: 'Knowledge Base', path: '/knowledge', icon: Database },
+    { label: 'Schedules', path: '/schedules', icon: Clock },
+    { label: 'Workspaces', path: '/workspaces', icon: Share2 },
+    { label: 'Interviews', path: '/interviews', icon: Users2 },
+    { label: 'Resume', path: '/resume', icon: FileText },
+    { label: 'Spaced Review', path: '/review', icon: RotateCcw },
+    { label: 'Quiz', path: '/quiz', icon: Sparkles },
+    { label: 'Weekly Summary', path: '/weekly', icon: Calendar },
+    { label: 'Settings', path: '/settings', icon: Settings },
+  ]
+
+  const isCurrent = (path) => {
+    if (path === '/') return pathname === '/'
+    return pathname.startsWith(path)
+  }
+
   return (
-    <div className="min-h-screen">
-      <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <Link to="/" className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 font-bold text-white">A</span>
-            <span className="gradient-text text-lg font-bold tracking-tight">AGENTOS</span>
-          </Link>
+    <div className="min-h-screen bg-[#060810] text-slate-100 flex flex-col font-sans selection:bg-neon-violet selection:text-white">
+      {/* Background Cyber Grid Overlay */}
+      <div className="fixed inset-0 cyber-grid pointer-events-none opacity-40 z-0" />
+
+      {/* Command Palette Modal */}
+      <CommandPalette isOpen={cmdOpen} onClose={() => setCmdOpen(false)} />
+
+      {/* Top Navigation Bar */}
+      <header className="sticky top-0 z-30 border-b border-indigo-500/20 bg-[#070a12]/80 backdrop-blur-xl">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-3">
-            {user && (
-              <>
-                <span className="hidden text-sm text-slate-600 sm:block">{user.name}</span>
-                <button onClick={handleLogout} className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-200">
-                  Logout
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 md:hidden"
+              aria-label="Toggle navigation"
+            >
+              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+
+            <Link to="/" className="flex items-center gap-2.5 group">
+              <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 via-violet-600 to-cyan-400 shadow-glow-sm">
+                <span className="font-display font-extrabold text-white text-lg">A</span>
+                <span className="absolute -inset-0.5 rounded-xl bg-gradient-to-tr from-indigo-500 to-cyan-400 opacity-0 group-hover:opacity-40 blur transition duration-300" />
+              </div>
+              <div>
+                <span className="gradient-text font-display text-xl font-bold tracking-tight">AGENTOS</span>
+                <span className="hidden sm:inline-block ml-2 rounded-full border border-indigo-500/30 bg-indigo-950/60 px-2 py-0.5 text-[10px] font-semibold text-indigo-300 tracking-wider">
+                  CYBER OS v2.0
+                </span>
+              </div>
+            </Link>
+          </div>
+
+          {/* Center search trigger */}
+          <div className="hidden sm:flex items-center">
+            <button
+              onClick={() => setCmdOpen(true)}
+              className="flex items-center gap-3 rounded-xl border border-indigo-500/25 bg-slate-900/60 px-3.5 py-1.5 text-xs text-slate-400 hover:border-indigo-500/50 hover:text-slate-200 transition shadow-inner"
+            >
+              <Search className="h-3.5 w-3.5 text-indigo-400" />
+              <span>Search commands, agents, workflows...</span>
+              <kbd className="rounded border border-indigo-500/30 bg-slate-800/80 px-1.5 py-0.5 text-[10px] text-indigo-300 font-mono">
+                ⌘K
+              </kbd>
+            </button>
+          </div>
+
+          {/* Right Status + User Profile */}
+          <div className="flex items-center gap-3">
+            {/* Live System Heartbeat */}
+            <div className="hidden lg:flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-950/30 px-3 py-1 text-xs text-emerald-400">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              </span>
+              <span className="font-mono text-[11px] font-medium tracking-wide">CORE ACTIVE</span>
+            </div>
+
+            {user ? (
+              <div className="flex items-center gap-2.5">
+                <div className="hidden sm:flex flex-col text-right">
+                  <span className="text-xs font-semibold text-slate-200">{user.name}</span>
+                  <span className="text-[10px] text-indigo-400 font-mono">AGENT ARCHITECT</span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  title="Logout"
+                  className="flex items-center gap-1.5 rounded-xl border border-red-500/25 bg-red-950/20 px-3 py-1.5 text-xs font-semibold text-red-400 hover:bg-red-900/40 hover:border-red-500/40 transition"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Logout</span>
                 </button>
-              </>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link
+                  to="/login"
+                  className="rounded-xl border border-indigo-500/30 bg-indigo-950/40 px-3.5 py-1.5 text-xs font-semibold text-indigo-300 hover:bg-indigo-900/60 transition"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  to="/register"
+                  className="btn-cyber-primary rounded-xl px-3.5 py-1.5 text-xs font-semibold"
+                >
+                  Get Started
+                </Link>
+              </div>
             )}
           </div>
         </div>
       </header>
 
-      <div className="mx-auto flex max-w-6xl gap-6 px-4 py-6">
-        <aside className="hidden w-48 shrink-0 md:block">
-          <nav className="sticky top-20 space-y-1">
-            <Link to="/" className={linkCls(pathname === '/')}>Dashboard</Link>
-            <Link to="/interviews" className={linkCls(pathname.startsWith('/interviews'))}>Interviews</Link>
-            <Link to="/resume" className={linkCls(pathname === '/resume')}>Resume</Link>
-            <Link to="/review" className={linkCls(pathname === '/review')}>Review</Link>
-            <Link to="/quiz" className={linkCls(pathname === '/quiz')}>Quiz</Link>
-            <Link to="/weekly" className={linkCls(pathname === '/weekly')}>Weekly</Link>
-            <Link to="/settings" className={linkCls(pathname === '/settings')}>Settings</Link>
-            <p className="px-3 pt-4 text-xs text-slate-400">Goals and tasks open from the dashboard.</p>
-          </nav>
+      {/* Main Container Layout */}
+      <div className="relative mx-auto flex max-w-7xl w-full flex-1 gap-6 px-4 py-6 sm:px-6 z-10">
+        {/* Desktop Collapsible Sidebar */}
+        <aside
+          className={`hidden md:flex flex-col transition-all duration-300 shrink-0 ${
+            collapsed ? 'w-18' : 'w-56'
+          }`}
+        >
+          <div className="sticky top-22 flex flex-col justify-between cyber-glass rounded-2xl p-3 border border-indigo-500/20 shadow-glass-panel min-h-[calc(100vh-8rem)]">
+            <nav className="space-y-1.5">
+              {navLinks.map((item) => {
+                const active = isCurrent(item.path)
+                const Icon = item.icon
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
+                      active
+                        ? 'bg-gradient-to-r from-indigo-600/90 to-violet-600/80 text-white shadow-glow-sm border border-indigo-400/40'
+                        : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-100 border border-transparent'
+                    }`}
+                    title={collapsed ? item.label : undefined}
+                  >
+                    <Icon className={`h-4 w-4 shrink-0 ${active ? 'text-white' : 'text-indigo-400'}`} />
+                    {!collapsed && (
+                      <div className="flex flex-1 items-center justify-between">
+                        <span className="truncate">{item.label}</span>
+                        {item.badge && (
+                          <span
+                            className={`rounded-full px-1.5 py-0.2 text-[9px] font-bold tracking-wider ${
+                              item.badge === 'LIVE'
+                                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 animate-pulse'
+                                : 'bg-indigo-500/20 text-indigo-300 border border-indigo-400/40'
+                            }`}
+                          >
+                            {item.badge}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </Link>
+                )
+              })}
+            </nav>
+
+            {/* Sidebar Footer with Collapse Toggle */}
+            <div className="pt-4 border-t border-indigo-500/15">
+              <button
+                onClick={() => setCollapsed(!collapsed)}
+                className="w-full flex items-center justify-center gap-2 rounded-xl py-2 text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition"
+              >
+                {collapsed ? (
+                  <ChevronRight className="h-4 w-4" />
+                ) : (
+                  <>
+                    <ChevronLeft className="h-4 w-4" />
+                    <span>Collapse Panel</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </aside>
+
+        {/* Mobile Navigation Drawer */}
+        {mobileOpen && (
+          <div
+            className="fixed inset-0 z-40 bg-black/80 backdrop-blur-md md:hidden"
+            onClick={() => setMobileOpen(false)}
+          >
+            <div
+              className="absolute left-0 top-0 bottom-0 w-64 cyber-glass border-r border-indigo-500/30 p-4 space-y-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between pb-3 border-b border-indigo-500/20">
+                <span className="gradient-text font-display font-bold text-lg">AGENTOS NAVIGATION</span>
+                <button
+                  onClick={() => setMobileOpen(false)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-white"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <nav className="space-y-1">
+                {navLinks.map((item) => {
+                  const active = isCurrent(item.path)
+                  const Icon = item.icon
+                  return (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      onClick={() => setMobileOpen(false)}
+                      className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition ${
+                        active
+                          ? 'bg-indigo-600 text-white shadow-glow-sm'
+                          : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                      }`}
+                    >
+                      <Icon className="h-4 w-4 text-indigo-400" />
+                      <span>{item.label}</span>
+                      {item.badge && (
+                        <span className="ml-auto text-[9px] px-1.5 py-0.5 rounded bg-indigo-900 text-indigo-300 font-bold">
+                          {item.badge}
+                        </span>
+                      )}
+                    </Link>
+                  )
+                })}
+              </nav>
+            </div>
+          </div>
+        )}
+
+        {/* Page Content Viewport */}
         <main className="min-w-0 flex-1">{children}</main>
       </div>
     </div>

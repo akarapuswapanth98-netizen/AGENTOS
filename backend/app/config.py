@@ -37,6 +37,13 @@ GROQ_MODEL_NAME: str = os.getenv("GROQ_MODEL_NAME", "openai/gpt-oss-20b")
 GROQ_MAX_TOKENS: int = int(os.getenv("GROQ_MAX_TOKENS", "4000"))
 GROQ_TIMEOUT_SECONDS: int = int(os.getenv("GROQ_TIMEOUT_SECONDS", "90"))
 GROQ_REASONING_EFFORT: str = os.getenv("GROQ_REASONING_EFFORT", "low").strip().lower()
+
+# Multi-Model Extensions: OpenAI and Google Gemini
+OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+OPENAI_MODEL_NAME: str = os.getenv("OPENAI_MODEL_NAME", "gpt-4o")
+GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+GEMINI_MODEL_NAME: str = os.getenv("GEMINI_MODEL_NAME", "gemini-2.5-flash")
+
 ENVIRONMENT: str = os.getenv("ENVIRONMENT", "dev").strip().lower()
 DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./agentos.db")
 # Canonical names first, legacy names as fallbacks (old .env files keep working).

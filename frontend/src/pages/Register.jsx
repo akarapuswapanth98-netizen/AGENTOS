@@ -4,8 +4,8 @@ import { getErrorMessage } from '../api/client.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import AuthShell from '../components/AuthShell.jsx'
 import ErrorBanner from '../components/ErrorBanner.jsx'
+import { UserPlus, Sparkles } from 'lucide-react'
 
-// Public sign-up form (password >= 8 chars, enforced by the backend too).
 export default function Register() {
   const navigate = useNavigate()
   const { register } = useAuth()
@@ -29,21 +29,63 @@ export default function Register() {
     }
   }
 
-  const inputCls = 'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none'
+  const inputCls =
+    'w-full rounded-xl border border-indigo-500/25 bg-[#090d18] px-3.5 py-2.5 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400/40 transition'
 
   return (
     <AuthShell
-      title="Create account"
-      subtitle="Start planning your career with AI."
-      footer={<>Have an account? <Link to="/login" className="font-medium text-indigo-600 hover:underline">Log in</Link></>}
+      title="Create Account"
+      subtitle="Initialize your autonomous multi-agent career workspace."
+      footer={
+        <div className="flex items-center justify-between text-xs">
+          <span>Already registered?</span>
+          <Link to="/login" className="font-semibold text-cyan-300 hover:underline">
+            Log in →
+          </Link>
+        </div>
+      }
     >
       <ErrorBanner message={error} />
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <input className={inputCls} placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
-        <input className={inputCls} type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <input className={inputCls} type="password" placeholder="Password (min 8 chars)" minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} required />
-        <button disabled={busy} className="btn-shine w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60">
-          {busy ? 'Creating…' : 'Register'}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="text-xs text-slate-300 block mb-1">Architect Name</label>
+          <input
+            className={inputCls}
+            placeholder="Ada Lovelace"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label className="text-xs text-slate-300 block mb-1">Email Address</label>
+          <input
+            className={inputCls}
+            type="email"
+            placeholder="architect@agentos.dev"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label className="text-xs text-slate-300 block mb-1">Password (Min 8 characters)</label>
+          <input
+            className={inputCls}
+            type="password"
+            placeholder="••••••••••••"
+            minLength={8}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+        <button
+          disabled={busy}
+          className="btn-cyber-primary w-full rounded-xl py-2.5 text-xs font-semibold flex items-center justify-center gap-2 shadow-glow-sm disabled:opacity-50"
+        >
+          <UserPlus className="h-4 w-4" />
+          {busy ? 'Provisioning OS Environment…' : 'Initialize Account'}
         </button>
       </form>
     </AuthShell>

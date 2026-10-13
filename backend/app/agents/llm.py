@@ -14,6 +14,10 @@ from app.config import (
     GROQ_TIMEOUT_SECONDS,
     LLM_PROVIDER,
     MODEL_NAME,
+    OPENAI_API_KEY,
+    OPENAI_MODEL_NAME,
+    GEMINI_API_KEY,
+    GEMINI_MODEL_NAME,
     USE_MOCK_LLM,
 )
 from app.utils.json_utils import extract_json
@@ -24,6 +28,7 @@ logger = logging.getLogger(__name__)
 MAX_TOKENS = 2000
 TIMEOUT_S = 30
 GROQ_BASE_URL = "https://api.groq.com/openai/v1"
+GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
 GROQ_RETRY_DELAY_S = 2
 
 # Last real-call failure that triggered a mock fallback. Shape:
@@ -280,6 +285,30 @@ def _call_groq_text(system: str, user: str) -> str:
         return _groq_complete(client, system, user)
 
 
+def _call_openai_text(system: str, user: str) -> str:
+    """Call OpenAI endpoint with JSON response format."""
+    client = OpenAI(api_key=OPENAI_API_KEY or None, timeout=TIMEOUT_S)
+    resp = client.chat.completions.create(
+        model=OPENAI_MODEL_NAME,
+        max_tokens=MAX_TOKENS,
+        response_format={"type": "json_object"},
+        messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
+    )
+    return resp.choices[0].message.content or ""
+
+
+def _call_gemini_text(system: str, user: str) -> str:
+    """Call Google Gemini using its OpenAI-compatible endpoint with JSON format."""
+    client = OpenAI(api_key=GEMINI_API_KEY or None, base_url=GEMINI_BASE_URL, timeout=TIMEOUT_S)
+    resp = client.chat.completions.create(
+        model=GEMINI_MODEL_NAME,
+        max_tokens=MAX_TOKENS,
+        response_format={"type": "json_object"},
+        messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
+    )
+    return resp.choices[0].message.content or ""
+
+
 def call_llm_json_live(
     system_prompt: str,
     user_prompt: str,
@@ -299,6 +328,10 @@ def call_llm_json_live(
     full_system = system_prompt + "\nReturn ONLY valid JSON, no markdown fences or preamble."
     if provider == "groq":
         text = _call_groq_text(full_system, user_prompt)
+    elif provider == "openai":
+        text = _call_openai_text(full_system, user_prompt)
+    elif provider == "gemini":
+        text = _call_gemini_text(full_system, user_prompt)
     else:
         from anthropic import Anthropic
 
@@ -311,6 +344,10 @@ def call_llm_json_live(
         repair_user = f"Your previous reply was not valid JSON. Fix it and return ONLY the JSON object:\n{text}"
         if provider == "groq":
             text2 = _call_groq_text("Return ONLY valid JSON, no markdown fences or preamble.", repair_user)
+        elif provider == "openai":
+            text2 = _call_openai_text("Return ONLY valid JSON, no markdown fences or preamble.", repair_user)
+        elif provider == "gemini":
+            text2 = _call_gemini_text("Return ONLY valid JSON, no markdown fences or preamble.", repair_user)
         else:
             from anthropic import Anthropic
 

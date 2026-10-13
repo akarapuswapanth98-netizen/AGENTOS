@@ -19,6 +19,13 @@ import Review from './pages/Review.jsx'
 import Settings from './pages/Settings.jsx'
 import TaskDetail from './pages/TaskDetail.jsx'
 import Weekly from './pages/Weekly.jsx'
+import AgentBuilder from './pages/AgentBuilder.jsx'
+import Monitoring from './pages/Monitoring.jsx'
+import Marketplace from './pages/Marketplace.jsx'
+import KnowledgeBase from './pages/KnowledgeBase.jsx'
+import Scheduler from './pages/Scheduler.jsx'
+import Workspaces from './pages/Workspaces.jsx'
+import Analytics from './pages/Analytics.jsx'
 
 // Every route fades through the same transition. Keyed by pathname so the old
 // page exits before the new one enters; skipped entirely on first load.
@@ -30,6 +37,13 @@ function AnimatedRoutes() {
         <Route path="/login" element={<PageFade><Login /></PageFade>} />
         <Route path="/register" element={<PageFade><Register /></PageFade>} />
         <Route path="/" element={<PageFade><ProtectedRoute><Dashboard /></ProtectedRoute></PageFade>} />
+        <Route path="/builder" element={<PageFade><ProtectedRoute><AgentBuilder /></ProtectedRoute></PageFade>} />
+        <Route path="/monitoring" element={<PageFade><ProtectedRoute><Monitoring /></ProtectedRoute></PageFade>} />
+        <Route path="/marketplace" element={<PageFade><ProtectedRoute><Marketplace /></ProtectedRoute></PageFade>} />
+        <Route path="/knowledge" element={<PageFade><ProtectedRoute><KnowledgeBase /></ProtectedRoute></PageFade>} />
+        <Route path="/schedules" element={<PageFade><ProtectedRoute><Scheduler /></ProtectedRoute></PageFade>} />
+        <Route path="/workspaces" element={<PageFade><ProtectedRoute><Workspaces /></ProtectedRoute></PageFade>} />
+        <Route path="/analytics" element={<PageFade><ProtectedRoute><Analytics /></ProtectedRoute></PageFade>} />
         <Route path="/goals/:id" element={<PageFade><ProtectedRoute><GoalDetail /></ProtectedRoute></PageFade>} />
         <Route path="/goals/:id/report" element={<PageFade><ProtectedRoute><Report /></ProtectedRoute></PageFade>} />
         <Route path="/tasks/:id" element={<PageFade><ProtectedRoute><TaskDetail /></ProtectedRoute></PageFade>} />

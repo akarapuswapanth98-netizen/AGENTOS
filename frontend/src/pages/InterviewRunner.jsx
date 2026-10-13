@@ -4,8 +4,17 @@ import { api, getErrorMessage } from '../api/client.js'
 import ErrorBanner from '../components/ErrorBanner.jsx'
 import Loader from '../components/Loader.jsx'
 import { useToast } from '../context/ToastContext.jsx'
+import {
+  ArrowLeft,
+  Users2,
+  Sparkles,
+  Send,
+  CheckCircle2,
+  Award,
+  ArrowRight,
+  TrendingUp,
+} from 'lucide-react'
 
-// One-question-at-a-time runner with progress, per-answer feedback, final summary.
 export default function InterviewRunner() {
   const { id } = useParams()
   const toast = useToast()
@@ -24,17 +33,18 @@ export default function InterviewRunner() {
     try {
       const data = await api.getInterview(id)
       setSession(data)
-      // Jump to the first unanswered question.
       const firstOpen = data.questions.findIndex((q) => q.score == null)
       setIndex(firstOpen === -1 ? 0 : firstOpen)
     } catch (err) {
-      setError(getErrorMessage(err, 'Could not load interview'))
+      setError(getErrorMessage(err, 'Could not load interview session'))
     } finally {
       setLoading(false)
     }
   }, [id])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => {
+    load()
+  }, [load])
 
   const questions = useMemo(() => session?.questions || [], [session])
   const current = questions[index]
@@ -43,8 +53,8 @@ export default function InterviewRunner() {
 
   async function handleAnswer(e) {
     e.preventDefault()
-    if (!answer.trim()) {          // never score an empty answer
-      setError('Write an answer before submitting')
+    if (!answer.trim()) {
+      setError('Please provide an answer before submitting')
       return
     }
     setSending(true)
@@ -52,7 +62,12 @@ export default function InterviewRunner() {
     try {
       const res = await api.answerQuestion(session.id, current.id, answer)
       setFeedback(res)
-      setSession({ ...session, questions: session.questions.map((q) => q.id === current.id ? { ...q, score: res.score, answer_text: answer } : q) })
+      setSession({
+        ...session,
+        questions: session.questions.map((q) =>
+          q.id === current.id ? { ...q, score: res.score, answer_text: answer } : q
+        ),
+      })
     } catch (err) {
       setError(getErrorMessage(err, 'Could not submit answer'))
     } finally {
@@ -72,7 +87,7 @@ export default function InterviewRunner() {
     try {
       const done = await api.completeInterview(session.id)
       setSession(done)
-      toast.success(`Interview scored ${done.overall_score} / 100`)
+      toast.success(`Interview evaluated: ${done.overall_score} / 100`)
     } catch (err) {
       const msg = getErrorMessage(err, 'Could not complete interview')
       setError(msg)
@@ -82,85 +97,171 @@ export default function InterviewRunner() {
     }
   }
 
-  if (loading) return <Loader label="Loading interview…" />
+  if (loading) return <Loader label="Mounting interview environment…" />
   if (!session) return <ErrorBanner message={error || 'Interview not found'} onRetry={load} />
 
-  // Completed view: overall score + per-round breakdown.
+  // Completed scorecard summary
   if (session.status === 'completed') {
     return (
-      <div className="space-y-6">
-        <Link to="/interviews" className="text-sm font-medium text-indigo-600 hover:underline">← All interviews</Link>
-        <div className="rounded-xl bg-white p-5 text-center shadow-sm">
-          <p className="text-sm text-slate-500">Overall score</p>
-          <p className="text-5xl font-bold text-indigo-600">{session.overall_score}</p>
-          <p className="mt-1 text-sm text-slate-500">{session.role}</p>
-        </div>
-        <div className="rounded-xl bg-white p-5 shadow-sm">
-          <h2 className="text-base font-semibold text-slate-900">Score per round</h2>
-          <div className="mt-3 space-y-2">
-            {Object.entries(session.round_scores).map(([round, score]) => (
-              <div key={round}>
-                <div className="flex justify-between text-sm text-slate-600"><span>{round}</span><span>{score}</span></div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
-                  <div className="h-2 rounded-full bg-indigo-500" style={{ width: `${score}%` }} />
-                </div>
-              </div>
-            ))}
+      <div className="space-y-6 text-slate-200">
+        <Link
+          to="/interviews"
+          className="inline-flex items-center gap-2 text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition"
+        >
+          <ArrowLeft className="h-4 w-4" /> All Interview Sessions
+        </Link>
+
+        {/* Scorecard Hero */}
+        <div className="rounded-3xl cyber-glass border border-indigo-500/25 p-8 text-center shadow-glass-panel relative overflow-hidden">
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-950/40 px-3 py-1 text-xs font-mono text-emerald-300 mb-3">
+            <CheckCircle2 className="h-3.5 w-3.5" /> SIMULATION COMPLETE
           </div>
+          <p className="text-xs uppercase font-mono tracking-wider text-slate-400">Final Composite Score</p>
+          <p className="font-display text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-cyan-300 to-indigo-400 my-2">
+            {session.overall_score}
+            <span className="text-xl text-slate-400 font-normal"> / 100</span>
+          </p>
+          <p className="text-sm font-semibold text-slate-300">{session.role} Technical Assessment</p>
         </div>
-        <Link to={`/goals/${session.goal_id}`} className="text-sm font-medium text-indigo-600 hover:underline">← Back to goal</Link>
+
+        {/* Round Scores Breakdown */}
+        {session.round_scores && (
+          <div className="rounded-3xl cyber-glass border border-indigo-500/20 p-6 shadow-glass-panel">
+            <h2 className="flex items-center gap-2 font-display text-base font-bold text-white border-b border-indigo-500/15 pb-3">
+              <TrendingUp className="h-4 w-4 text-cyan-400" />
+              Per-Round Performance Dimensions
+            </h2>
+            <div className="mt-4 space-y-3">
+              {Object.entries(session.round_scores).map(([round, score]) => (
+                <div key={round}>
+                  <div className="flex justify-between text-xs text-slate-300 mb-1 font-mono">
+                    <span>{round}</span>
+                    <span className="text-cyan-300 font-bold">{score}%</span>
+                  </div>
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-slate-900 border border-indigo-500/20">
+                    <div
+                      className="h-2 rounded-full bg-gradient-to-r from-indigo-500 to-cyan-400"
+                      style={{ width: `${score}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="flex justify-between">
+          <Link
+            to={`/goals/${session.goal_id}`}
+            className="btn-cyber-primary rounded-xl px-4 py-2 text-xs font-semibold inline-flex items-center gap-2"
+          >
+            <span>Return to Career Blueprint</span>
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      <Link to="/interviews" className="text-sm font-medium text-indigo-600 hover:underline">← All interviews</Link>
+    <div className="space-y-6 text-slate-200">
+      <Link
+        to="/interviews"
+        className="inline-flex items-center gap-2 text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition"
+      >
+        <ArrowLeft className="h-4 w-4" /> All Interview Sessions
+      </Link>
+
       <ErrorBanner message={error} onRetry={load} />
 
-      <div className="rounded-xl bg-white p-5 shadow-sm">
-        <div className="flex items-center justify-between text-sm">
-          <span className="font-semibold text-slate-900">{session.role} interview</span>
-          <span className="text-slate-500">Question {index + 1} of {questions.length}</span>
+      {/* Progress Telemetry */}
+      <div className="rounded-2xl cyber-glass border border-indigo-500/20 p-5 shadow-glass-panel">
+        <div className="flex items-center justify-between text-xs">
+          <span className="font-display font-bold text-white text-sm">
+            {session.role} Interview Round
+          </span>
+          <span className="font-mono text-cyan-300 font-semibold">
+            Question {index + 1} of {questions.length}
+          </span>
         </div>
-        <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-200">
-          <div className="h-2 rounded-full bg-indigo-600 transition-all" style={{ width: `${((index + 1) / Math.max(1, questions.length)) * 100}%` }} />
+        <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-900 border border-indigo-500/20">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-cyan-400 transition-all duration-500"
+            style={{ width: `${((index + 1) / Math.max(1, questions.length)) * 100}%` }}
+          />
         </div>
-        <p className="mt-2 text-xs text-slate-400">{answered}/{questions.length} answered</p>
+        <p className="mt-2 text-[11px] font-mono text-slate-400">
+          {answered} of {questions.length} questions evaluated
+        </p>
       </div>
 
+      {/* Active Question Box */}
       {current && (
-        <div className="rounded-xl bg-white p-5 shadow-sm">
-          <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-semibold text-violet-700">{current.round_name}</span>
-          <p className="mt-2 font-medium text-slate-900">{current.question_text}</p>
-          {current.score != null && !feedback ? (
-            <p className="mt-2 text-sm text-green-700">Answered — score {current.score}. Edit below to retry.</p>
-          ) : null}
-          <form onSubmit={handleAnswer} className="mt-3">
-            <textarea value={answer} onChange={(e) => setAnswer(e.target.value)} rows={5}
-              placeholder="Answer with a concrete example…"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none" />
-            <div className="mt-3 flex gap-2">
-              <button disabled={sending || !answer.trim()} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60">
-                {sending ? 'Evaluating…' : 'Submit answer'}
+        <div className="rounded-3xl cyber-glass border border-indigo-500/25 p-6 sm:p-8 shadow-glass-panel space-y-4">
+          <div className="flex items-center gap-2">
+            <span className="rounded-full border border-violet-500/40 bg-violet-950/60 px-3 py-0.5 text-xs font-mono font-bold uppercase text-violet-300 shadow-glow-sm">
+              Round: {current.round_name}
+            </span>
+            <span className="rounded-full border border-cyan-500/30 bg-cyan-950/40 px-2.5 py-0.5 text-[11px] font-mono text-cyan-300">
+              Skill: {current.skill}
+            </span>
+          </div>
+
+          <h2 className="font-display text-lg font-bold text-white leading-relaxed">
+            {current.question_text}
+          </h2>
+
+          {current.score != null && !feedback && (
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/30 p-3 text-xs text-emerald-300">
+              Evaluated with score: <b>{current.score}/100</b>. You can refine your answer below to re-evaluate.
+            </div>
+          )}
+
+          <form onSubmit={handleAnswer} className="space-y-3">
+            <textarea
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+              rows={6}
+              placeholder="Structure your answer clearly with context, approach, and trade-offs..."
+              className="w-full rounded-2xl border border-indigo-500/25 bg-[#080d1a] p-4 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400/40 font-mono"
+            />
+            <div className="flex flex-wrap items-center gap-2.5">
+              <button
+                type="submit"
+                disabled={sending || !answer.trim()}
+                className="btn-cyber-primary rounded-xl px-5 py-2 text-xs font-semibold flex items-center gap-2 disabled:opacity-50"
+              >
+                <Sparkles className="h-4 w-4" />
+                {sending ? 'Interviewer Deliberating…' : 'Submit for Round Evaluation'}
               </button>
-              {!answer.trim() && (
-                <p className="mt-2 text-xs text-slate-400">Write an answer first — an empty answer is not submitted.</p>
-              )}
               {index < questions.length - 1 && (
-                <button type="button" onClick={next} className="rounded-lg bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-200">
-                  Skip for now →
+                <button
+                  type="button"
+                  onClick={next}
+                  className="btn-cyber-ghost rounded-xl px-4 py-2 text-xs font-semibold"
+                >
+                  Skip for Now →
                 </button>
               )}
             </div>
           </form>
+
+          {/* Real-Time Recruiter Feedback */}
           {feedback && (
-            <div className="mt-4 rounded-lg bg-slate-50 p-3 text-sm">
-              <p className="font-semibold text-slate-900">Score: {feedback.score} / 100</p>
-              <p className="mt-1 text-slate-600">{feedback.feedback}</p>
-              <div className="mt-3">
-                <button onClick={next} className="rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-indigo-700">
-                  {index < questions.length - 1 ? 'Next question →' : 'Review answers'}
+            <div className="rounded-2xl border border-indigo-500/30 bg-indigo-950/30 p-5 space-y-3 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="font-display font-bold text-white text-sm">
+                  Interviewer Score: {feedback.score} / 100
+                </span>
+                <span className="text-[11px] font-mono text-cyan-300">ROUND FEEDBACK</span>
+              </div>
+              <p className="text-slate-300 leading-relaxed font-sans">{feedback.feedback}</p>
+              <div className="pt-2">
+                <button
+                  onClick={next}
+                  className="btn-cyber-cyan rounded-xl px-4 py-2 text-xs font-semibold flex items-center gap-2"
+                >
+                  {index < questions.length - 1 ? 'Next Question →' : 'Review Assessment'}
                 </button>
               </div>
             </div>
@@ -168,10 +269,14 @@ export default function InterviewRunner() {
         </div>
       )}
 
+      {/* Complete Interview Button */}
       {allAnswered && (
-        <button onClick={handleComplete} disabled={completing}
-          className="w-full rounded-xl bg-green-600 px-4 py-3 font-semibold text-white hover:bg-green-700 disabled:opacity-60">
-          {completing ? 'Scoring…' : 'Complete interview & see results'}
+        <button
+          onClick={handleComplete}
+          disabled={completing}
+          className="btn-cyber-primary w-full rounded-2xl py-3 text-sm font-bold shadow-glow-violet disabled:opacity-50"
+        >
+          {completing ? 'Computing Final Scorecard…' : 'Complete 5-Round Simulation & Generate Report'}
         </button>
       )}
     </div>
