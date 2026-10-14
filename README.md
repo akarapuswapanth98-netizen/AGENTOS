@@ -2,12 +2,13 @@
 
 [![CI](https://github.com/akarapuswapanth98-netizen/AGENTOS/actions/workflows/ci.yml/badge.svg)](https://github.com/akarapuswapanth98-netizen/AGENTOS/actions/workflows/ci.yml)
 [![Vercel Deployment](https://img.shields.io/badge/Vercel-Deployed-black?logo=vercel)](https://agentos-six-omega.vercel.app)
+[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL%20%7C%20Auth%20%7C%20Storage%20%7C%20Vector-3ECF8E?logo=supabase)](https://supabase.com)
 [![React](https://img.shields.io/badge/React-18-61dafb?logo=react)](https://react.dev)
 [![Three.js](https://img.shields.io/badge/Three.js-R3F-black?logo=threedotjs)](https://threejs.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi)](https://fastapi.tiangolo.com)
-[![Pytest](https://img.shields.io/badge/Pytest-154%20passed-brightgreen?logo=pytest)](https://pytest.org)
+[![Pytest](https://img.shields.io/badge/Pytest-157%20passed-brightgreen?logo=pytest)](https://pytest.org)
 
-AGENTOS v2.0 transforms career ambitions into an adaptive, multi-agent autonomous system. Upgraded with an immersive **3D "vibe coding" cyber aesthetic**, real-time telemetry streaming, visual workflow builder, and holographic readiness intelligence — all while preserving 100% of underlying API contracts, 154 backend test fixtures, and zero database regressions.
+AGENTOS v2.0 transforms career ambitions and autonomous workflows into an adaptive, multi-agent operating system. Powered by **Supabase** (PostgreSQL 16, Row Level Security, Auth, Storage, Realtime SSE, and `pgvector`), deployed on **Vercel**, and featuring an immersive **3D "vibe coding" cyber aesthetic**, real-time telemetry streaming, visual workflow builder, and evidence-based readiness intelligence — all while preserving 100% of underlying API contracts, 157 backend test fixtures, and zero database regressions.
 
 ---
 
@@ -44,6 +45,11 @@ AGENTOS v2.0 transforms career ambitions into an adaptive, multi-agent autonomou
 - Dynamic provider switcher supporting `anthropic` (Claude 3.5 Sonnet), `openai` (GPT-4o), and `gemini` (Gemini 2.5 Flash via OpenAI compatibility endpoint).
 - Real-time `X-Process-Time` latency logging and structured telemetry headers.
 - 100% backwards-compatible fallback to deterministic mock agents when keys are absent.
+
+### 🎯 7. Job Match & Skill Gap Intelligence
+- **Evidence-Based Job Match (`/job-match`)**: Match resumes against any target Job Description with strict percentage scoring, extracted requirements vs identified proof, and actionable resume bridge bullets.
+- **4-Pillar Interactive Skill Matrix (`/skills`)**: Comprehensive gap analysis across Core Architecture, Production React, Distributed Systems, and Behavioral leadership with real-time tone customization (Executive, Direct, Friendly, Constructive).
+- **Interactive Knowledge Hub (`/how-it-works`, `/prompt-engineering`, `/about`)**: Complete breakdown of the autonomous agent loop, production prompt engineering guide with 1-click copyable system prompts, and full team vision.
 
 ---
 

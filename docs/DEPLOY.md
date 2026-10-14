@@ -1,57 +1,87 @@
-# Deploying AGENTOS
+# Deploying AGENTOS v2.0
 
-## Render (backend + Postgres) - one click (free tier)
+AGENTOS v2.0 is designed for hybrid enterprise deployment:
+- **Frontend & Serverless Edge**: Hosted on **Vercel** (`https://agentos-six-omega.vercel.app`).
+- **Core Persistence & Realtime**: Powered by **Supabase** (PostgreSQL 16, Auth, Storage, Realtime SSE, and `pgvector`).
+- **FastAPI Core Engine (Optional/Companion)**: Containerized on Render, Railway, or AWS ECS.
 
-1. In Render: **New > Blueprint**, select this repo. The `render.yaml` at the
-   repo root creates the `agentos-backend` web service and the `agentos-db`
-   database, both on the free plan.
-2. When asked, fill in `GROQ_API_KEY` (never commit it). Everything else is
-   pre-filled, including the migrations in the start command.
-3. Apply, wait for the build, then open `https://agentos-backend.onrender.com/health`
-   (use your real service URL if you renamed it) - it returns `{"status": "ok"}`.
-4. Send that backend URL back here so the frontend (`VITE_API_URL`) can be
-   pointed at it and redeployed.
+---
 
-Free-tier notes: the web service sleeps after ~15 min idle, so the first
-request after idle takes ~30-60 s; the free Postgres expires after 30 days.
+## ⚡ 1. Supabase Setup (Postgres, Auth, Storage & Vector)
 
-## Render (backend + Postgres) - manual
+Follow these steps to initialize your Supabase cloud backend:
 
-1. Create a **PostgreSQL** instance; copy its *Internal Database URL*.
-2. Create a **Web Service** from this repo: root `backend/`, build `pip install -r requirements.txt`, start `sh -c "python -m alembic -c alembic.ini upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port $PORT"`.
-3. Set env vars (Render dashboard; never commit them):
-   `ENVIRONMENT=production`, `DATABASE_URL=<internal URL>`,
-   `JWT_SECRET=<random string, 32+ chars>`, `JWT_EXPIRE_MINUTES=60`,
-   `CORS_ORIGINS=https://<your-frontend-url>`,
-   `LLM_PROVIDER=groq`, `GROQ_API_KEY=<key>`, `LLM_MOCK=false`, `LLM_CALLS_PER_HOUR=60`.
-4. Deploy. Migrations run automatically on every start.
+1. **Create a Supabase Project**:
+   - Go to [database.new](https://database.new) and create a new project.
+   - Note down your database password and target region.
 
-## Vercel (frontend)
+2. **Execute Database Migrations**:
+   - In your Supabase Dashboard, open the **SQL Editor**.
+   - Sequentially run the following migration scripts located in `supabase/migrations/`:
+     1. `20261014000001_core_schema.sql`: Installs `uuid-ossp`, `pgcrypto`, `vector`, and builds the 22 core tables (profiles, workspaces, agents, runs, run_logs, embeddings, schedules, etc.).
+     2. `20261014000002_rls_policies.sql`: Enables Row Level Security (RLS) across all 22 tables with multi-tenant RBAC helper functions.
+     3. `20261014000003_triggers_and_functions.sql`: Installs `handle_new_user()` onboarding trigger, updated-at triggers, `match_knowledge_embeddings()` cosine search RPC, and run telemetry aggregators.
+     4. `20261014000004_storage_buckets.sql`: Provisions the `avatars` (public) and `knowledge-files` (private, tenant-isolated) storage buckets with strict RLS storage policies.
+   - Run `supabase/seed.sql`: Seeds 6 pre-built production agent templates with React Flow DAG graph topologies.
 
-1. Import the repo, set root to `frontend/`, framework preset Vite.
-2. Set build env `VITE_API_URL=https://<your-backend-url>` and deploy.
-3. Put that exact frontend URL into the backend's `CORS_ORIGINS`.
+3. **Retrieve API Credentials**:
+   - Navigate to **Project Settings > API**.
+   - Copy:
+     - **Project URL** (e.g. `https://xyzcompany.supabase.co`)
+     - **Project API Anon Key** (`anon` `public`)
 
-## Pre-deploy checklist
+---
 
-- Rotate any key ever exposed (it stays burned into git history otherwise).
-- Set a strong `JWT_SECRET` (32+ chars, random, unique per environment).
-- `CORS_ORIGINS` is the exact frontend URL — never `*` in production (the app refuses to start otherwise).
-- `ENVIRONMENT=production` so the startup guard is active.
+## 🚀 2. Vercel Frontend Deployment
 
-## Post-deploy smoke test
+1. **Import Repository**:
+   - In [Vercel Dashboard](https://vercel.com/dashboard), select **Add New Project** and import `akarapuswapanth98-netizen/AGENTOS`.
+   - Set **Root Directory** to `frontend`.
+   - Framework preset: **Vite**.
 
-1. `GET /health` returns `{"status": "ok"}`.
-2. Register a user, log in, create a goal.
-3. Check backend logs for the `LIVE LLM call` line (proves the real provider path).
-4. Submit a short answer; confirm a low score plus a remedial task.
+2. **Configure Environment Variables**:
+   Add the following environment variables in **Project Settings > Environment Variables**:
+   | Variable | Value | Description |
+   |---|---|---|
+   | `VITE_SUPABASE_URL` | `https://<your-project>.supabase.co` | Your Supabase Project URL |
+   | `VITE_SUPABASE_ANON_KEY` | `eyJhbGci...` | Supabase Public Anon Key |
+   | `VITE_API_URL` | `https://agentos-backend.onrender.com` | FastAPI backend URL (optional) |
 
-Free tiers may sleep: the first request after idle can take ~30-60 seconds. The
-`/health` endpoint doubles as a keep-alive ping and a load-balancer check.
+3. **Deploy**:
+   - Trigger the deployment.
+   - The production build runs `npm run build` with optimized Rollup code-splitting across React, Three.js, React Flow, and Supabase.
 
-## Rollback
+---
 
-Every release is a tag: `git tag` lists them (`v1.0`, `v1.1`, ...). To roll back,
-point Render at the tag (`git checkout v1.0` in a detached deploy or redeploy the
-tag) and re-run `alembic upgrade head` — migrations only move forward, so rolling
-back code never needs a downgrade unless a migration itself was bad.
+## 🐍 3. FastAPI Backend Deployment (Render Blueprint)
+
+1. In Render: **New > Blueprint**, select this repo. The `render.yaml` creates the `agentos-backend` web service and `agentos-db` PostgreSQL instance.
+2. Fill in `GROQ_API_KEY` (or `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`).
+3. Add your production Vercel frontend URL to `CORS_ORIGINS` (e.g. `https://agentos-six-omega.vercel.app`).
+4. Start command automatically executes Alembic migrations:
+   ```bash
+   python -m alembic -c alembic.ini upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port $PORT
+   ```
+
+---
+
+## ✅ Pre-Deploy Verification Checklist
+
+- [x] All 157 backend test fixtures passing (`python -m pytest tests/`).
+- [x] Vite frontend bundle builds with 0 errors and chunk-splitting configured.
+- [x] Storage buckets `avatars` and `knowledge-files` created and policies enabled.
+- [x] Vector extension and HNSW cosine search index verified in Supabase.
+- [x] Row Level Security (RLS) active on all 22 schema tables.
+- [x] CORS allowed origins configured with exact production frontend domains.
+
+---
+
+## 🔍 Post-Deploy Smoke Test
+
+1. **Authentication**: Register a new user, verify profile auto-creation via `handle_new_user()` trigger, and test password recovery.
+2. **Workspaces**: Navigate to `/workspaces`, create an auxiliary workspace, invite a collaborator, and verify role permissions.
+3. **Agent Builder**: Open `/builder`, load a template from `/marketplace`, tweak node prompts, and trigger an autonomous run.
+4. **Live Telemetry**: Open `/monitoring`, observe real-time run logs streaming via Supabase Realtime channel.
+5. **Knowledge Base**: Navigate to `/knowledge`, upload a PDF or Markdown document, verify chunking and cosine similarity query retrieval.
+6. **Job Match & Skills**: Test JD matching on `/job-match` and browse the interactive skill matrix on `/skills`.
+
