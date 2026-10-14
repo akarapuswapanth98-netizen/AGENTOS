@@ -115,3 +115,14 @@ def health(db: Session = Depends(get_db)):
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             content={"status": "degraded"},
         )
+
+
+@app.get("/api/db-inspect")
+def db_inspect(db: Session = Depends(get_db)):
+    """Inspect current connected database engine and tables."""
+    try:
+        row = db.execute(text("SELECT current_database(), current_user, inet_server_addr()::text")).fetchone()
+        tables = [r[0] for r in db.execute(text("SELECT table_name FROM information_schema.tables WHERE table_schema='public'")).fetchall()]
+        return {"database": row[0], "user": row[1], "server": row[2], "tables": tables}
+    except Exception as e:
+        return {"error": str(e)}
