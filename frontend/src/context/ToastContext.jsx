@@ -69,8 +69,15 @@ export function ToastProvider({ children }) {
   )
 }
 
+const fallbackToast = {
+  success: (message) => console.log('[Toast:success]', message),
+  error: (message) => console.error('[Toast:error]', message),
+  info: (message) => console.info('[Toast:info]', message),
+  addToast: (message, kind) => console.log(`[Toast:${kind}]`, message),
+}
+
 export function useToast() {
   const ctx = useContext(ToastContext)
-  if (!ctx) throw new Error('useToast must be used inside ToastProvider')
-  return ctx
+  return ctx || fallbackToast
 }
+

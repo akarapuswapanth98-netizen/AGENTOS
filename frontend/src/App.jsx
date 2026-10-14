@@ -81,18 +81,18 @@ function AnimatedRoutes() {
 // Public auth/educational pages + protected app pages. Layout wraps everything.
 export default function App() {
   return (
-    <AuthProvider>
-      <WorkspaceProvider>
-        <ThemeProvider>
-          <ToastProvider>
-            <SoundProvider>
+    <ToastProvider>
+      <ThemeProvider>
+        <SoundProvider>
+          <AuthProvider>
+            <WorkspaceProvider>
               <Layout>
                 <AnimatedRoutes />
               </Layout>
-            </SoundProvider>
-          </ToastProvider>
-        </ThemeProvider>
-      </WorkspaceProvider>
-    </AuthProvider>
+            </WorkspaceProvider>
+          </AuthProvider>
+        </SoundProvider>
+      </ThemeProvider>
+    </ToastProvider>
   )
 }
