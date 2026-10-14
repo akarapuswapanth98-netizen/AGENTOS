@@ -36,11 +36,13 @@ apiClient.interceptors.request.use((config) => {
   return config
 })
 
-// An expired/invalid token anywhere means: forget it and go log in again.
+// An expired/invalid token handling with demo mode protection
 apiClient.interceptors.response.use(
   (res) => res,
   (err) => {
-    if (err?.response?.status === 401 && !window.location.pathname.startsWith('/login')) {
+    const token = localStorage.getItem('agentos_token')
+    const isDemo = token && token.startsWith('demo-session-token-')
+    if (err?.response?.status === 401 && !window.location.pathname.startsWith('/login') && !isDemo) {
       localStorage.removeItem('agentos_token')
       window.location.assign('/login')
     }
@@ -71,6 +73,7 @@ export const api = {
   // --- goals ---
   createGoal: (payload) => apiClient.post('/goals', payload).then((r) => r.data),
   listGoals: () => apiClient.get('/goals').then((r) => r.data),
+  getGoals: () => apiClient.get('/goals').then((r) => r.data),
   getGoal: (id) => apiClient.get(`/goals/${id}`).then((r) => r.data),
   deleteGoal: (id) => apiClient.delete(`/goals/${id}`).then((r) => r.data),
   updateGoal: (id, payload) => apiClient.patch(`/goals/${id}`, payload).then((r) => r.data),
@@ -129,4 +132,5 @@ export const api = {
   health: () => apiClient.get('/health').then((r) => r.data),
 }
 
-export default apiClient
+api.client = apiClient
+export default api

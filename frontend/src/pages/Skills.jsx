@@ -13,7 +13,7 @@ import {
   Brain,
   Filter,
 } from 'lucide-react'
-import api from '../api/client.js'
+import { api } from '../api/client.js'
 import ErrorBanner from '../components/ErrorBanner.jsx'
 import Skeleton from '../components/Skeleton.jsx'
 

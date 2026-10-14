@@ -17,7 +17,7 @@ import {
   TrendingUp,
   Cpu,
 } from 'lucide-react'
-import api, { getErrorMessage } from '../api/client.js'
+import { api, getErrorMessage } from '../api/client.js'
 import { useToast } from '../context/ToastContext.jsx'
 import ErrorBanner from '../components/ErrorBanner.jsx'
 
