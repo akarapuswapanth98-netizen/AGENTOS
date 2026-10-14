@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { api, getErrorMessage } from '../api/client.js'
 import { useToast } from '../context/ToastContext.jsx'
+import { useWorkspace } from '../context/WorkspaceContext.jsx'
+import { supabase, isSupabaseConfigured } from '../lib/supabase.js'
 import {
   Boxes,
   ArrowLeft,
@@ -13,9 +15,11 @@ import {
   Flame,
   ShieldCheck,
   Code2,
+  BrainCircuit,
+  ExternalLink,
 } from 'lucide-react'
 
-const TEMPLATES = [
+const STATIC_TEMPLATES = [
   {
     id: 'ai-fullstack',
     title: 'Full-Stack AI Application Architect',
@@ -87,7 +91,40 @@ const TEMPLATES = [
 export default function Marketplace() {
   const navigate = useNavigate()
   const toast = useToast()
+  const { currentWorkspace } = useWorkspace()
+  const [templates, setTemplates] = useState(STATIC_TEMPLATES)
   const [cloningId, setCloningId] = useState(null)
+
+  useEffect(() => {
+    async function loadDbTemplates() {
+      if (!isSupabaseConfigured) return
+      try {
+        const { data, error } = await supabase
+          .from('templates')
+          .select('*')
+          .eq('is_public', true)
+
+        if (!error && data && data.length > 0) {
+          setTemplates(
+            data.map((t) => ({
+              id: t.id,
+              title: t.title,
+              role: t.role,
+              days: 30,
+              difficulty: t.difficulty,
+              skills: t.skills || [],
+              desc: t.description,
+              agents: ['Analyst', 'Planner', 'Validator'],
+              color: 'from-indigo-500 to-cyan-400',
+            }))
+          )
+        }
+      } catch (e) {
+        console.warn('Could not load templates from Supabase:', e)
+      }
+    }
+    loadDbTemplates()
+  }, [])
 
   async function handleClone(template) {
     setCloningId(template.id)
@@ -107,6 +144,10 @@ export default function Marketplace() {
     }
   }
 
+  function handleOpenInBuilder(template) {
+    navigate(`/builder?template=${template.id}`)
+  }
+
   return (
     <div className="space-y-6 text-slate-200">
       {/* Header Banner */}
@@ -124,13 +165,13 @@ export default function Marketplace() {
           Pre-Configured Career Agent Templates
         </h1>
         <p className="mt-2 text-sm text-slate-300 max-w-2xl leading-relaxed">
-          Clone state-of-the-art multi-agent pipelines with 1 click. Each blueprint comes with pre-calibrated skill targets, curriculum milestones, and AI tutor configurations.
+          Clone state-of-the-art multi-agent pipelines with 1 click. Each blueprint comes with pre-calibrated skill targets, curriculum milestones, and interactive React Flow agent graphs.
         </p>
       </div>
 
       {/* Templates Gallery */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {TEMPLATES.map((tmpl) => (
+        {templates.map((tmpl) => (
           <div
             key={tmpl.id}
             className="card-lift rounded-3xl cyber-glass border border-indigo-500/20 p-6 shadow-glass-panel flex flex-col justify-between"
@@ -140,13 +181,14 @@ export default function Marketplace() {
                 <span className="rounded-full border border-indigo-500/40 bg-indigo-950/60 px-2.5 py-0.5 text-[10px] font-mono text-cyan-300 font-bold uppercase">
                   {tmpl.difficulty}
                 </span>
-                <span className="text-xs font-mono text-slate-400">{tmpl.days} DAYS</span>
+                <span className="text-xs font-mono text-slate-400">{tmpl.days} Day Blueprint</span>
               </div>
 
-              <h2 className="mt-3 font-display font-bold text-lg text-white leading-snug">
+              <h2 className="mt-3 font-display text-lg font-bold text-white leading-tight">
                 {tmpl.title}
               </h2>
-              <p className="mt-1 text-xs text-cyan-300 font-mono">Role: {tmpl.role}</p>
+              <p className="mt-1 text-xs text-indigo-300 font-mono font-medium">{tmpl.role}</p>
+
               <p className="mt-3 text-xs text-slate-300 leading-relaxed font-sans">{tmpl.desc}</p>
 
               <div className="mt-4 pt-3 border-t border-indigo-500/15">
@@ -166,14 +208,22 @@ export default function Marketplace() {
               </div>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-indigo-500/15">
+            <div className="mt-6 pt-4 border-t border-indigo-500/15 space-y-2">
               <button
                 onClick={() => handleClone(tmpl)}
                 disabled={cloningId === tmpl.id}
                 className="btn-cyber-primary w-full rounded-xl py-2.5 text-xs font-bold flex items-center justify-center gap-2 shadow-glow-sm disabled:opacity-50"
               >
                 <Sparkles className="h-4 w-4" />
-                {cloningId === tmpl.id ? 'Cloning Blueprint…' : '1-Click Clone Blueprint'}
+                {cloningId === tmpl.id ? 'Cloning Blueprint…' : '1-Click Clone Career Sprint'}
+              </button>
+
+              <button
+                onClick={() => handleOpenInBuilder(tmpl)}
+                className="w-full rounded-xl border border-indigo-500/30 bg-indigo-950/30 py-2 text-xs font-semibold text-indigo-300 hover:bg-indigo-900/50 hover:border-indigo-400/50 transition flex items-center justify-center gap-2"
+              >
+                <BrainCircuit className="h-3.5 w-3.5 text-cyan-400" />
+                Inspect & Edit in Agent Builder
               </button>
             </div>
           </div>
