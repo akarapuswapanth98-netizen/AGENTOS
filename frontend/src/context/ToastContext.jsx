@@ -22,9 +22,15 @@ export function ToastProvider({ children }) {
     timers.current[id] = setTimeout(() => dismiss(id), 4200)
   }, [dismiss])
 
+  const addToast = useCallback((message, kind = 'success') => {
+    push(kind, message)
+  }, [push])
+
   const value = {
     success: (message) => push('success', message),
     error: (message) => push('error', message),
+    info: (message) => push('info', message),
+    addToast,
   }
 
   return (
@@ -37,6 +43,8 @@ export function ToastProvider({ children }) {
             className={`toast-in pointer-events-auto flex items-start justify-between gap-3 rounded-2xl p-4 text-xs shadow-2xl backdrop-blur-xl border ${
               t.kind === 'success'
                 ? 'border-emerald-500/40 bg-[#071714]/90 text-emerald-200 shadow-glow-emerald'
+                : t.kind === 'info'
+                ? 'border-cyan-500/40 bg-[#07131d]/90 text-cyan-200 shadow-glow-cyan'
                 : 'border-rose-500/40 bg-[#1f0b12]/90 text-rose-200 shadow-glow-magenta'
             }`}
           >
@@ -44,7 +52,7 @@ export function ToastProvider({ children }) {
               {t.kind === 'success' ? (
                 <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
               ) : (
-                <AlertCircle className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" />
+                <AlertCircle className={`h-4 w-4 shrink-0 mt-0.5 ${t.kind === 'info' ? 'text-cyan-400' : 'text-rose-400'}`} />
               )}
               <span className="leading-relaxed font-medium">{t.message}</span>
             </div>

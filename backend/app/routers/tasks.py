@@ -53,7 +53,9 @@ def search_tasks(
     user: User = Depends(get_current_user),
 ) -> TaskSearchResponse:
     """Search the caller's tasks. All filters combine with AND, stable order."""
-    if status is not None and status not in ("pending", "in_progress", "completed"):
+    if status == "all":
+        status = None
+    elif status is not None and status not in ("pending", "in_progress", "completed"):
         raise HTTPException(status_code=422, detail="Invalid status filter")
     if goal_id is not None:
         get_owned_goal(db, goal_id, user.id)

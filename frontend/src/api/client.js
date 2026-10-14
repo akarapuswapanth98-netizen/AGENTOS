@@ -1,10 +1,19 @@
 import axios from 'axios'
 
-// Base URL comes from VITE_API_URL, falls back to the local FastAPI server.
-// No global Content-Type: axios sets application/json for plain objects and
-// we must NOT set it for FormData (see the interceptor below).
+function resolveBaseUrl() {
+  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL
+  if (typeof window !== 'undefined' && window.location) {
+    const { protocol, hostname } = window.location
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return `${protocol}//${hostname}:8000`
+    }
+  }
+  return 'http://127.0.0.1:8000'
+}
+
+// Base URL dynamically matches localhost or 127.0.0.1 depending on current window origin
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000',
+  baseURL: resolveBaseUrl(),
   timeout: 120000,
 })
 
@@ -45,6 +54,9 @@ export function getErrorMessage(err, fallback = 'Something went wrong') {
   if (typeof detail === 'string') return detail
   if (Array.isArray(detail)) return detail.map((d) => d?.msg || JSON.stringify(d)).join('; ')
   if (detail && typeof detail === 'object') return JSON.stringify(detail)
+  if (err?.code === 'ERR_NETWORK' || err?.message === 'Network Error') {
+    return `Network Error: Unable to connect to Agent OS backend at ${apiClient.defaults.baseURL}. Ensure the backend server is running on port 8000.`
+  }
   return err?.message || fallback
 }
 
@@ -85,6 +97,8 @@ export const api = {
     if (goalId) form.append('goal_id', String(goalId))
     return apiClient.post('/resume/analyze', form).then((r) => r.data)
   },
+  // --- job matching ---
+  matchJob: (payload) => apiClient.post('/job-match/analyze', payload).then((r) => r.data),
   // --- reviews ---
   getDueReviews: () => apiClient.get('/reviews/due').then((r) => r.data),
   startReview: (itemId) => apiClient.post(`/reviews/${itemId}/start`).then((r) => r.data),

@@ -26,9 +26,10 @@ function BreakdownBar({ label, value }) {
 
 export default function ScoreResult({ result }) {
   if (!result) return null
-  const { ring, text } = colorFor(result.score)
+  const scoreNum = typeof result.score === 'number' ? result.score : Number(result.score || 0)
+  const { ring, text } = colorFor(scoreNum)
   const circle = 2 * Math.PI * 26
-  const offset = circle - (circle * Math.min(100, Math.max(0, result.score))) / 100
+  const offset = circle - (circle * Math.min(100, Math.max(0, scoreNum))) / 100
   const breakdown = result.feedback?.breakdown || {}
   const strengths = result.feedback?.strengths || []
   const missing = result.feedback?.missing || []

@@ -49,7 +49,7 @@ export default function Workspaces() {
 
   return (
     <div className="space-y-6 text-slate-200">
-      <div className="rounded-3xl cyber-glass border border-indigo-500/25 p-6 sm:p-8 shadow-glass-panel">
+      <div className="rounded-3xl cyber-glass border border-white/10 p-6 sm:p-8 shadow-glass-panel">
         <Link
           to="/"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition mb-2"
@@ -70,7 +70,7 @@ export default function Workspaces() {
       {/* Invite Member Card */}
       <form
         onSubmit={handleInvite}
-        className="rounded-3xl cyber-glass border border-indigo-500/20 p-6 shadow-glass-panel flex flex-col sm:flex-row items-end gap-3"
+        className="rounded-3xl cyber-glass border border-white/10 p-6 shadow-glass-panel flex flex-col sm:flex-row items-end gap-3"
       >
         <div className="flex-1 w-full">
           <label className="text-xs font-semibold text-slate-300 block mb-1">
@@ -82,7 +82,7 @@ export default function Workspaces() {
             onChange={(e) => setInviteEmail(e.target.value)}
             placeholder="colleague@company.com"
             required
-            className="w-full rounded-xl border border-indigo-500/25 bg-[#090d18] px-3.5 py-2 text-xs text-slate-100 focus:border-indigo-400 focus:outline-none"
+            className="w-full rounded-xl border border-white/10 bg-[#090d16] px-3.5 py-2 text-xs text-slate-100 focus:border-indigo-400 focus:outline-none"
           />
         </div>
         <div className="w-full sm:w-48">
@@ -90,7 +90,7 @@ export default function Workspaces() {
           <select
             value={inviteRole}
             onChange={(e) => setInviteRole(e.target.value)}
-            className="w-full rounded-xl border border-indigo-500/25 bg-[#090d18] px-3.5 py-2 text-xs text-slate-100 focus:border-indigo-400 focus:outline-none"
+            className="w-full rounded-xl border border-white/10 bg-[#090d16] px-3.5 py-2 text-xs text-slate-100 focus:border-indigo-400 focus:outline-none"
           >
             <option value="Lead Architect">Lead Architect</option>
             <option value="Contributor">Contributor</option>
@@ -110,13 +110,13 @@ export default function Workspaces() {
       </form>
 
       {/* Team Members List */}
-      <div className="rounded-3xl cyber-glass border border-indigo-500/25 p-6 sm:p-8 shadow-glass-panel space-y-4">
-        <div className="flex items-center justify-between border-b border-indigo-500/15 pb-3">
+      <div className="rounded-3xl cyber-glass border border-white/10 p-6 sm:p-8 shadow-glass-panel space-y-4">
+        <div className="flex items-center justify-between border-b border-white/10 pb-3">
           <h2 className="font-display font-bold text-base text-white">Active Team Members</h2>
           <span className="text-xs font-mono text-cyan-300">{members.length} COLLABORATORS</span>
         </div>
 
-        <div className="divide-y divide-indigo-500/10">
+        <div className="divide-y divide-white/5">
           {members.map((m) => (
             <div key={m.id} className="py-3 flex items-center justify-between gap-3 text-xs">
               <div>

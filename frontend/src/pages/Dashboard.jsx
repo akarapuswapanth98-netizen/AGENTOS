@@ -29,6 +29,8 @@ import {
   CheckCircle2,
   Rocket,
   Share2,
+  Briefcase,
+  Target,
 } from 'lucide-react'
 import MissionLauncher from '../components/MissionLauncher.jsx'
 import ShareableAgentCard from '../components/ShareableAgentCard.jsx'
@@ -209,9 +211,9 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       {/* 3D Cyber Hero Banner */}
-      <div className="relative overflow-hidden rounded-3xl border border-indigo-500/25 bg-[#090d18] text-white shadow-2xl shadow-indigo-950/50">
-        <div className="animate-drift pointer-events-none absolute -right-20 -top-24 h-80 w-80 rounded-full bg-indigo-600/30 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-32 right-48 h-72 w-72 rounded-full bg-cyan-500/20 blur-3xl" />
+      <div className="relative overflow-hidden rounded-3xl border border-white/10 cyber-glass-panel text-white shadow-glass-panel">
+        <div className="animate-drift pointer-events-none absolute -right-20 -top-24 h-80 w-80 rounded-full bg-indigo-600/15 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-32 right-48 h-72 w-72 rounded-full bg-sky-500/10 blur-3xl" />
 
         <div className="relative grid gap-4 p-6 sm:grid-cols-[1fr_280px] lg:grid-cols-[1fr_340px] sm:p-8">
           <div className="flex flex-col justify-between">
@@ -232,11 +234,25 @@ export default function Dashboard() {
 
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <Link
-                to="/builder"
+                to="/job-match"
                 className="btn-cyber-primary rounded-xl px-4 py-2 text-sm font-semibold flex items-center gap-2"
               >
+                <Briefcase className="h-4 w-4 text-cyan-300" />
+                Job Matching
+              </Link>
+              <Link
+                to="/skills"
+                className="btn-cyber-ghost rounded-xl px-4 py-2 text-sm font-semibold flex items-center gap-2"
+              >
+                <Target className="h-4 w-4 text-indigo-400" />
+                Skill Gap Matrix
+              </Link>
+              <Link
+                to="/builder"
+                className="btn-cyber-ghost rounded-xl px-4 py-2 text-sm font-semibold flex items-center gap-2"
+              >
                 <BrainCircuit className="h-4 w-4" />
-                Visual Agent Builder
+                Agent Builder
               </Link>
               <Link
                 to="/review"

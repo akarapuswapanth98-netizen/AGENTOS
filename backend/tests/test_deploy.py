@@ -102,7 +102,7 @@ def test_repo_files_have_no_secrets():
     patterns = ("gsk_", "sk-ant-", "AKIA", "BEGIN RSA PRIVATE KEY", "BEGIN OPENSSH PRIVATE KEY")
     for path in targets:
         assert path.exists(), path
-        text = path.read_text()
+        text = path.read_text(encoding="utf-8")
         for marker in patterns:
             assert marker not in text, f"{path.name} leaks a secret-like value"
         assert "change-me" not in text, f"{path.name} uses a placeholder as a real value"
@@ -111,6 +111,6 @@ def test_repo_files_have_no_secrets():
 def test_dockerignore_covers_secrets_and_dbs():
     """Both .dockerignore files exclude env files and databases."""
     for service in ("backend", "frontend"):
-        text = (ROOT / service / ".dockerignore").read_text()
+        text = (ROOT / service / ".dockerignore").read_text(encoding="utf-8")
         assert ".env" in text
-    assert "*.db" in (ROOT / "backend" / ".dockerignore").read_text()
+    assert "*.db" in (ROOT / "backend" / ".dockerignore").read_text(encoding="utf-8")

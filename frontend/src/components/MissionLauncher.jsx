@@ -58,7 +58,7 @@ export default function MissionLauncher({ isOpen, onClose }) {
           particleCount: 80,
           spread: 70,
           origin: { y: 0.6 },
-          colors: ['#8b5cf6', '#06b6d4', '#10b981', '#f43f5e']
+          colors: ['#6366f1', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e']
         })
       } catch {
         // Confetti fallback
@@ -89,7 +89,7 @@ export default function MissionLauncher({ isOpen, onClose }) {
           {/* Warp speed particle streaks */}
           {isWarping && (
             <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
-              <div className="absolute inset-0 bg-gradient-to-b from-violet-600/10 via-transparent to-cyan-500/10" />
+              <div className="absolute inset-0 bg-gradient-to-b from-indigo-600/10 via-transparent to-blue-500/10" />
               <div className="w-full h-full animate-pulse bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-500/20 via-transparent to-transparent" />
             </div>
           )}
@@ -100,10 +100,10 @@ export default function MissionLauncher({ isOpen, onClose }) {
           initial={{ scale: 0.9, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          className="relative w-full max-w-lg glass-panel p-6 sm:p-8 z-10 border-indigo-500/40 shadow-glow-md overflow-hidden"
+          className="relative w-full max-w-lg cyber-glass p-6 sm:p-8 z-10 border border-white/10 shadow-glass-panel rounded-3xl overflow-hidden"
         >
           {/* Glowing Top Ambient */}
-          <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-72 h-32 bg-cyan-500/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-72 h-32 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
 
           {/* Close button (active once complete) */}
           <button
@@ -118,7 +118,7 @@ export default function MissionLauncher({ isOpen, onClose }) {
 
           {/* Header */}
           <div className="text-center mb-6">
-            <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl bg-gradient-to-tr from-violet-600 to-cyan-400 text-white shadow-glow-sm mb-3">
+            <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-blue-500 text-white shadow-depth-card border border-white/20 mb-3">
               <Rocket className={`h-6 w-6 ${phase < 4 ? 'animate-bounce' : ''}`} />
             </div>
             <h2 className="text-2xl font-bold font-display text-white tracking-tight">
@@ -142,10 +142,10 @@ export default function MissionLauncher({ isOpen, onClose }) {
                   key={idx}
                   className={`flex items-center gap-3 p-3 rounded-xl border transition-all duration-300 ${
                     isPast
-                      ? 'bg-emerald-950/20 border-emerald-500/30 text-emerald-300'
+                      ? 'bg-emerald-950/25 border-emerald-500/30 text-emerald-300'
                       : isCurrent
-                      ? 'bg-violet-950/40 border-violet-500/50 text-white shadow-glow-sm'
-                      : 'bg-slate-900/30 border-slate-800/60 text-slate-500'
+                      ? 'bg-indigo-950/40 border-indigo-500/40 text-white shadow-depth-card'
+                      : 'bg-slate-900/30 border-white/5 text-slate-500'
                   }`}
                 >
                   <div
@@ -153,7 +153,7 @@ export default function MissionLauncher({ isOpen, onClose }) {
                       isPast
                         ? 'bg-emerald-500/20 text-emerald-400'
                         : isCurrent
-                        ? 'bg-violet-500/20 text-violet-400 animate-pulse'
+                        ? 'bg-indigo-500/20 text-indigo-400 animate-pulse'
                         : 'bg-slate-800 text-slate-600'
                     }`}
                   >

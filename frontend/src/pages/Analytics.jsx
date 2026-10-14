@@ -236,11 +236,11 @@ export default function Analytics() {
       {/* Main Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Retention Curve Chart (SVG) */}
-        <div className="lg:col-span-7 glass-panel p-6">
+        <div className="lg:col-span-7 cyber-glass p-6 rounded-3xl border border-white/10 shadow-glass-panel">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-lg font-bold font-display text-white flex items-center gap-2">
-                <Brain className="h-5 w-5 text-violet-400" />
+                <Brain className="h-5 w-5 text-indigo-400" />
                 Cognitive Retention Curve
               </h2>
               <p className="text-xs text-slate-400 mt-0.5">
@@ -249,7 +249,7 @@ export default function Analytics() {
             </div>
             <div className="flex items-center gap-4 text-xs font-mono">
               <span className="flex items-center gap-1.5 text-cyan-400">
-                <span className="h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_8px_#06b6d4]" />
+                <span className="h-2 w-2 rounded-full bg-cyan-400 shadow-glow-sm" />
                 Agent OS Active Recall
               </span>
               <span className="flex items-center gap-1.5 text-slate-500">
@@ -260,7 +260,7 @@ export default function Analytics() {
           </div>
 
           {/* Holographic Retention SVG Graph */}
-          <div className="relative h-64 w-full bg-slate-950/60 rounded-xl border border-slate-800/80 p-4 flex flex-col justify-between">
+          <div className="relative h-64 w-full bg-[#080c15] rounded-2xl border border-white/10 p-4 flex flex-col justify-between shadow-inner">
             {/* Grid lines */}
             <div className="absolute inset-x-4 inset-y-4 grid grid-rows-4 pointer-events-none opacity-15">
               <div className="border-b border-indigo-400" />
@@ -338,14 +338,14 @@ export default function Analytics() {
         </div>
 
         {/* Skill Mastery Velocity Breakdown */}
-        <div className="lg:col-span-5 glass-panel p-6 flex flex-col justify-between">
+        <div className="lg:col-span-5 cyber-glass p-6 rounded-3xl border border-white/10 shadow-glass-panel flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold font-display text-white flex items-center gap-2">
                 <Gauge className="h-5 w-5 text-indigo-400" />
                 Skill Mastery Velocity
               </h2>
-              <span className="text-xs font-mono text-indigo-400 bg-indigo-950/60 border border-indigo-500/30 px-2 py-0.5 rounded-full">
+              <span className="text-xs font-mono text-indigo-300 bg-slate-900/80 border border-white/10 px-2 py-0.5 rounded-full shadow-sm">
                 Rank: Senior L5
               </span>
             </div>
@@ -365,9 +365,9 @@ export default function Analytics() {
                       <span className="font-mono font-bold text-white">{skill.score}%</span>
                     </div>
                   </div>
-                  <div className="h-2 w-full bg-slate-900 rounded-full overflow-hidden p-0.5 border border-slate-800">
+                  <div className="h-2 w-full bg-slate-900 rounded-full overflow-hidden p-0.5 border border-white/5">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-violet-500 to-cyan-400 transition-all duration-700 group-hover:brightness-125"
+                      className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 transition-all duration-700 group-hover:brightness-125"
                       style={{ width: `${skill.score}%` }}
                     />
                   </div>
@@ -376,7 +376,7 @@ export default function Analytics() {
             </div>
           </div>
 
-          <div className="mt-6 pt-4 border-t border-slate-800/80 flex items-center justify-between">
+          <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-emerald-400" />
               <span className="text-xs text-slate-400">Ready for Staff Assessment</span>
@@ -392,7 +392,7 @@ export default function Analytics() {
       </div>
 
       {/* Execution Audit Feed */}
-      <div className="glass-panel p-6">
+      <div className="cyber-glass p-6 rounded-3xl border border-white/10 shadow-glass-panel">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h2 className="text-lg font-bold font-display text-white flex items-center gap-2">

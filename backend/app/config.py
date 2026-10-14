@@ -23,10 +23,21 @@ def _first_set(*names: str) -> str | None:
 
 
 def _parse_origins(raw: str | None) -> list[str]:
-    """Split comma-separated origins, dropping blanks (spaces, trailing commas)."""
+    """Split comma-separated origins, dropping blanks, and expanding localhost/127.0.0.1 pairs."""
     if not raw:
         return []
-    return [o.strip() for o in raw.split(",") if o.strip()]
+    origins = [o.strip() for o in raw.split(",") if o.strip()]
+    expanded = list(origins)
+    for o in origins:
+        if "localhost" in o:
+            alt = o.replace("localhost", "127.0.0.1")
+            if alt not in expanded:
+                expanded.append(alt)
+        elif "127.0.0.1" in o:
+            alt = o.replace("127.0.0.1", "localhost")
+            if alt not in expanded:
+                expanded.append(alt)
+    return expanded
 
 
 ANTHROPIC_API_KEY: str = os.getenv("ANTHROPIC_API_KEY", "")

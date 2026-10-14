@@ -6,6 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
 import { ToastProvider } from './context/ToastContext.jsx'
 import { SoundProvider } from './context/SoundContext.jsx'
+import { ThemeProvider } from './context/ThemeContext.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import GoalDetail from './pages/GoalDetail.jsx'
 import InterviewRunner from './pages/InterviewRunner.jsx'
@@ -27,6 +28,11 @@ import KnowledgeBase from './pages/KnowledgeBase.jsx'
 import Scheduler from './pages/Scheduler.jsx'
 import Workspaces from './pages/Workspaces.jsx'
 import Analytics from './pages/Analytics.jsx'
+import JobMatch from './pages/JobMatch.jsx'
+import Skills from './pages/Skills.jsx'
+import HowItWorks from './pages/HowItWorks.jsx'
+import PromptEngineering from './pages/PromptEngineering.jsx'
+import About from './pages/About.jsx'
 
 // Every route fades through the same transition. Keyed by pathname so the old
 // page exits before the new one enters; skipped entirely on first load.
@@ -37,7 +43,13 @@ function AnimatedRoutes() {
       <Routes location={location} key={location.pathname}>
         <Route path="/login" element={<PageFade><Login /></PageFade>} />
         <Route path="/register" element={<PageFade><Register /></PageFade>} />
+        <Route path="/how-it-works" element={<PageFade><HowItWorks /></PageFade>} />
+        <Route path="/prompt-engineering" element={<PageFade><PromptEngineering /></PageFade>} />
+        <Route path="/about" element={<PageFade><About /></PageFade>} />
+
         <Route path="/" element={<PageFade><ProtectedRoute><Dashboard /></ProtectedRoute></PageFade>} />
+        <Route path="/job-match" element={<PageFade><ProtectedRoute><JobMatch /></ProtectedRoute></PageFade>} />
+        <Route path="/skills" element={<PageFade><ProtectedRoute><Skills /></ProtectedRoute></PageFade>} />
         <Route path="/builder" element={<PageFade><ProtectedRoute><AgentBuilder /></ProtectedRoute></PageFade>} />
         <Route path="/monitoring" element={<PageFade><ProtectedRoute><Monitoring /></ProtectedRoute></PageFade>} />
         <Route path="/marketplace" element={<PageFade><ProtectedRoute><Marketplace /></ProtectedRoute></PageFade>} />
@@ -61,17 +73,19 @@ function AnimatedRoutes() {
   )
 }
 
-// Public auth pages + protected app pages. Layout wraps everything.
+// Public auth/educational pages + protected app pages. Layout wraps everything.
 export default function App() {
   return (
     <AuthProvider>
-      <ToastProvider>
-        <SoundProvider>
-          <Layout>
-            <AnimatedRoutes />
-          </Layout>
-        </SoundProvider>
-      </ToastProvider>
+      <ThemeProvider>
+        <ToastProvider>
+          <SoundProvider>
+            <Layout>
+              <AnimatedRoutes />
+            </Layout>
+          </SoundProvider>
+        </ToastProvider>
+      </ThemeProvider>
     </AuthProvider>
   )
 }

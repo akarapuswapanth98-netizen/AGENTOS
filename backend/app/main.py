@@ -16,6 +16,7 @@ from app.routers import (
     dashboard,
     goals,
     interviews,
+    job_match,
     me,
     progress,
     quizzes,
@@ -58,6 +59,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Process-Time", "Content-Disposition"],
 )
 
 
@@ -91,6 +93,7 @@ app.include_router(goals.router)
 app.include_router(tasks.router)
 app.include_router(progress.router)
 app.include_router(interviews.router)
+app.include_router(job_match.router)
 app.include_router(stream.router)
 
 

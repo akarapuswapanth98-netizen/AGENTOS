@@ -4,8 +4,8 @@ import * as THREE from 'three'
 
 // Agent nodes configuration for the 3D neural cluster
 const AGENT_NODES = [
-  { id: 'analyst', label: 'Analyst', pos: [-1.8, 1.1, 0.4], color: '#8b5cf6' },
-  { id: 'planner', label: 'Planner', pos: [1.7, 1.2, -0.3], color: '#06b6d4' },
+  { id: 'analyst', label: 'Analyst', pos: [-1.8, 1.1, 0.4], color: '#6366f1' },
+  { id: 'planner', label: 'Planner', pos: [1.7, 1.2, -0.3], color: '#0ea5e9' },
   { id: 'validator', label: 'Validator', pos: [2.0, -1.0, 0.5], color: '#10b981' },
   { id: 'interviewer', label: 'Interviewer', pos: [-1.9, -1.1, -0.4], color: '#f43f5e' },
   { id: 'tutor', label: 'Tutor', pos: [0.0, 1.9, 0.6], color: '#f59e0b' },
@@ -40,7 +40,7 @@ function NeuralConnections({ hoveredId }) {
   return (
     <lineSegments ref={lineRef} geometry={geometry}>
       <lineBasicMaterial
-        color={hoveredId ? '#22d3ee' : '#818cf8'}
+        color={hoveredId ? '#38bdf8' : '#818cf8'}
         transparent
         opacity={0.4}
         linewidth={1}
@@ -161,8 +161,8 @@ function CentralCore({ hoveredId }) {
       <mesh ref={ring1} rotation={[Math.PI / 4, 0, 0]}>
         <torusGeometry args={[1.15, 0.02, 16, 64]} />
         <meshStandardMaterial
-          color="#06b6d4"
-          emissive="#0891b2"
+          color="#0284c7"
+          emissive="#0369a1"
           emissiveIntensity={0.6}
           roughness={0.3}
         />
@@ -172,8 +172,8 @@ function CentralCore({ hoveredId }) {
       <mesh ref={ring2} rotation={[-Math.PI / 3, Math.PI / 6, 0]}>
         <torusGeometry args={[1.35, 0.018, 16, 64]} />
         <meshStandardMaterial
-          color="#8b5cf6"
-          emissive="#7c3aed"
+          color="#6366f1"
+          emissive="#4f46e5"
           emissiveIntensity={0.6}
           roughness={0.3}
         />
@@ -278,14 +278,15 @@ export default function Hero3D({ className = '' }) {
       >
         <ambientLight intensity={0.8} />
         <directionalLight position={[5, 6, 6]} intensity={1.5} color="#ffffff" />
-        <pointLight position={[-4, -3, 3]} intensity={14} color="#8b5cf6" />
-        <pointLight position={[4, -2, 2]} intensity={12} color="#06b6d4" />
+        <pointLight position={[-4, -3, 3]} intensity={12} color="#6366f1" />
+        <pointLight position={[4, -2, 2]} intensity={10} color="#0ea5e9" />
         <SceneContainer hoveredId={hoveredId} onHover={setHoveredId} />
       </Canvas>
 
       {/* Interactive node indicator chip at bottom right */}
       {hoveredId && (
-        <div className="pointer-events-none absolute bottom-2 right-2 rounded-full border border-neon-cyan/40 bg-cyber-glass px-3 py-1 text-xs font-semibold text-cyan-300 shadow-glow-sm">
+        <div className="pointer-events-none absolute bottom-2 right-2 rounded-full border border-indigo-500/30 bg-slate-950/85 px-3 py-1 text-xs font-semibold text-slate-200 shadow-glow-sm backdrop-blur-md flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-cyan-400" />
           Node: {AGENT_NODES.find((n) => n.id === hoveredId)?.label}
         </div>
       )}

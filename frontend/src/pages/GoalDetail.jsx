@@ -379,6 +379,7 @@ export default function GoalDetail() {
           <p className="text-xs text-slate-400 font-mono">
             {searchTotal} match{searchTotal === 1 ? '' : 'es'}
             {filterLabel ? ` for ${filterLabel}` : ''}
+            {statusParam === 'completed' && overdueParam ? ' (completed tasks are never overdue)' : ''}
           </p>
         )}
       </div>

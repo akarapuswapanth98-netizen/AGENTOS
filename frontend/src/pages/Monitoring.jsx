@@ -68,7 +68,7 @@ export default function Monitoring() {
   return (
     <div className="space-y-6 text-slate-200">
       {/* Header Banner */}
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-3xl cyber-glass border border-indigo-500/25 p-6 shadow-glass-panel">
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-3xl cyber-glass border border-white/10 p-6 shadow-glass-panel">
         <div>
           <Link
             to="/"
@@ -102,7 +102,7 @@ export default function Monitoring() {
 
       {/* Telemetry Metric Gauges */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-2xl cyber-glass border border-indigo-500/20 p-5 shadow-glass-panel">
+        <div className="rounded-2xl cyber-glass border border-white/10 p-5 shadow-glass-panel">
           <div className="flex items-center justify-between text-xs text-slate-400">
             <span className="font-mono uppercase">Cumulative Tokens</span>
             <Cpu className="h-4 w-4 text-cyan-400" />
@@ -113,7 +113,7 @@ export default function Monitoring() {
           <p className="mt-1 text-xs text-slate-400 font-mono">Tokens processed across nodes</p>
         </div>
 
-        <div className="rounded-2xl cyber-glass border border-indigo-500/20 p-5 shadow-glass-panel">
+        <div className="rounded-2xl cyber-glass border border-white/10 p-5 shadow-glass-panel">
           <div className="flex items-center justify-between text-xs text-slate-400">
             <span className="font-mono uppercase">Estimated Cost (USD)</span>
             <Zap className="h-4 w-4 text-amber-400" />
@@ -124,7 +124,7 @@ export default function Monitoring() {
           <p className="mt-1 text-xs text-slate-400 font-mono">Model inference expenditure</p>
         </div>
 
-        <div className="rounded-2xl cyber-glass border border-indigo-500/20 p-5 shadow-glass-panel">
+        <div className="rounded-2xl cyber-glass border border-white/10 p-5 shadow-glass-panel">
           <div className="flex items-center justify-between text-xs text-slate-400">
             <span className="font-mono uppercase">Mean Latency</span>
             <Clock className="h-4 w-4 text-violet-400" />
@@ -135,7 +135,7 @@ export default function Monitoring() {
           <p className="mt-1 text-xs text-slate-400 font-mono">Per-turn generation speed</p>
         </div>
 
-        <div className="rounded-2xl cyber-glass border border-indigo-500/20 p-5 shadow-glass-panel">
+        <div className="rounded-2xl cyber-glass border border-white/10 p-5 shadow-glass-panel">
           <div className="flex items-center justify-between text-xs text-slate-400">
             <span className="font-mono uppercase">Active Neural Node</span>
             <Server className="h-4 w-4 text-emerald-400" />
@@ -150,8 +150,8 @@ export default function Monitoring() {
       </div>
 
       {/* Real-Time Event Waterfall Stream */}
-      <div className="rounded-3xl cyber-glass border border-indigo-500/25 p-6 sm:p-8 shadow-glass-panel space-y-4">
-        <div className="flex items-center justify-between border-b border-indigo-500/15 pb-4">
+      <div className="rounded-3xl cyber-glass border border-white/10 p-6 sm:p-8 shadow-glass-panel space-y-4">
+        <div className="flex items-center justify-between border-b border-white/10 pb-4">
           <div className="flex items-center gap-2">
             <Terminal className="h-5 w-5 text-indigo-400" />
             <h2 className="font-display text-base font-bold text-white uppercase tracking-wider">
@@ -172,10 +172,10 @@ export default function Monitoring() {
             events.map((ev) => (
               <div
                 key={ev.id}
-                className="rounded-xl border border-indigo-500/15 bg-[#080d1a] p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 transition hover:border-indigo-500/35"
+                className="rounded-xl border border-white/10 bg-[#080c15] p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 transition hover:border-indigo-500/35 shadow-sm"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <span className="rounded-md border border-indigo-500/40 bg-indigo-950/60 px-2 py-0.5 text-[10px] text-cyan-300 font-bold uppercase shrink-0">
+                  <span className="rounded-md border border-white/10 bg-slate-900 px-2 py-0.5 text-[10px] text-cyan-300 font-bold uppercase shrink-0 font-mono">
                     @{ev.agent}
                   </span>
                   <span className="text-slate-200 truncate">{ev.message}</span>

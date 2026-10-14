@@ -19,6 +19,11 @@ import {
   Database,
   Clock,
   Share2,
+  Briefcase,
+  Target,
+  GitBranch,
+  Terminal,
+  Shield,
 } from 'lucide-react'
 
 export default function CommandPalette({ isOpen, onClose }) {
@@ -31,6 +36,11 @@ export default function CommandPalette({ isOpen, onClose }) {
       category: 'Navigation',
       items: [
         { id: 'dash', label: 'Dashboard', desc: 'Main career HUD and readiness score', icon: LayoutDashboard, path: '/' },
+        { id: 'job-match', label: 'Job Matching', desc: 'Evidence-based fit analysis against target job description', icon: Briefcase, path: '/job-match' },
+        { id: 'skills', label: 'Skill Gap Matrix', desc: 'Current, required, matched and missing competencies', icon: Target, path: '/skills' },
+        { id: 'how-it-works', label: 'How It Works', desc: 'Five-stage autonomous career methodology', icon: GitBranch, path: '/how-it-works' },
+        { id: 'prompts', label: 'Prompt Architecture', desc: 'Engineered prompts, single-responsibility agents', icon: Terminal, path: '/prompt-engineering' },
+        { id: 'about', label: 'About & Ethics', desc: 'Transparent AI ethics, privacy and architecture', icon: Shield, path: '/about' },
         { id: 'builder', label: 'Visual Agent Builder', desc: 'Drag-and-drop agent workflow canvas', icon: BrainCircuit, path: '/builder' },
         { id: 'monitor', label: 'Live Agent Monitoring', desc: 'Real-time telemetry, tokens and logs', icon: Activity, path: '/monitoring' },
         { id: 'analytics', label: 'Holographic Analytics', desc: 'Skill mastery curves & token metrics', icon: BarChart3, path: '/analytics' },
@@ -49,6 +59,8 @@ export default function CommandPalette({ isOpen, onClose }) {
     {
       category: 'Actions',
       items: [
+        { id: 'action-jobmatch', label: 'Run Job Match', desc: 'Evidence match against JD', icon: Briefcase, action: () => navigate('/job-match') },
+        { id: 'action-skills', label: 'Explore Skill Gaps', desc: 'Inspect current vs required skills', icon: Target, action: () => navigate('/skills') },
         { id: 'action-quiz', label: 'Start 5-Minute Quiz', desc: 'Launch immediate skill test', icon: Sparkles, action: () => navigate('/quiz') },
         { id: 'action-interview', label: 'Launch Mock Interview', desc: 'Begin 5-round simulation', icon: Users2, action: () => navigate('/interviews') },
         { id: 'action-resume', label: 'Upload New Resume', desc: 'Extract skills and generate goal', icon: FileText, action: () => navigate('/resume') },
@@ -127,11 +139,11 @@ export default function CommandPalette({ isOpen, onClose }) {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-2xl rounded-2xl border border-indigo-500/30 bg-[#0d1222] shadow-2xl shadow-indigo-950/80 overflow-hidden text-slate-200"
+        className="w-full max-w-2xl rounded-2xl border border-white/10 cyber-glass shadow-glass-panel overflow-hidden text-slate-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Input Bar */}
-        <div className="relative flex items-center border-b border-indigo-500/20 px-4 py-3.5">
+        <div className="relative flex items-center border-b border-white/10 px-4 py-3.5">
           <Search className="h-5 w-5 text-indigo-400 shrink-0 mr-3" />
           <input
             autoFocus
@@ -149,7 +161,7 @@ export default function CommandPalette({ isOpen, onClose }) {
               <X className="h-4 w-4" />
             </button>
           )}
-          <span className="ml-3 rounded border border-slate-700 bg-slate-800/80 px-2 py-0.5 text-xs text-slate-400">
+          <span className="ml-3 rounded border border-white/10 bg-slate-800/80 px-2 py-0.5 text-xs text-slate-400 font-mono">
             ESC
           </span>
         </div>
@@ -163,7 +175,7 @@ export default function CommandPalette({ isOpen, onClose }) {
           ) : (
             filtered.map((group) => (
               <div key={group.category} className="space-y-1">
-                <div className="px-3 pt-2 pb-1 text-xs font-semibold uppercase tracking-wider text-indigo-400/80">
+                <div className="px-3 pt-2 pb-1 text-xs font-semibold uppercase tracking-wider text-indigo-400">
                   {group.category}
                 </div>
                 {group.items.map((item) => {
@@ -182,15 +194,15 @@ export default function CommandPalette({ isOpen, onClose }) {
                       onMouseEnter={() => setSelectedIndex(itemIndex)}
                       className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-left transition-all ${
                         isSelected
-                          ? 'bg-indigo-600/25 border border-indigo-500/40 text-white shadow-sm'
-                          : 'text-slate-300 hover:bg-slate-800/60 border border-transparent'
+                          ? 'bg-indigo-600/20 border border-indigo-500/35 text-white shadow-depth-card'
+                          : 'text-slate-300 hover:bg-slate-800/50 border border-transparent'
                       }`}
                     >
                       <div
                         className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
                           isSelected
-                            ? 'bg-indigo-600 text-white'
-                            : 'bg-slate-800 text-indigo-400'
+                            ? 'bg-indigo-600 text-white shadow-sm'
+                            : 'bg-slate-800/80 text-indigo-400'
                         }`}
                       >
                         <Icon className="h-4 w-4" />
@@ -213,12 +225,12 @@ export default function CommandPalette({ isOpen, onClose }) {
         </div>
 
         {/* Footer shortcuts */}
-        <div className="flex items-center justify-between border-t border-indigo-500/15 bg-[#090d18] px-4 py-2.5 text-xs text-slate-400">
-          <div className="flex items-center gap-3">
-            <span>↑↓ to navigate</span>
-            <span>↵ to select</span>
+        <div className="flex items-center justify-between border-t border-white/10 bg-[#090d16] px-4 py-2.5 text-xs text-slate-400">
+          <div className="flex items-center gap-3 font-mono text-[11px]">
+            <span>↑↓ navigate</span>
+            <span>↵ select</span>
           </div>
-          <span className="text-indigo-400 font-mono">AGENTOS v2.0 • CYBER OPERATING SYSTEM</span>
+          <span className="text-indigo-400 font-mono text-[11px] tracking-wide">AGENTOS SPATIAL SHELL</span>
         </div>
       </div>
     </div>

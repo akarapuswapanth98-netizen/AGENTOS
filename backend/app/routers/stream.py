@@ -4,17 +4,13 @@ import json
 import time
 from typing import AsyncGenerator
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Query
 from fastapi.responses import StreamingResponse
-from sqlalchemy.orm import Session
-
-from app.database import get_db
-from app.models import AgentTrace, Goal
 
 router = APIRouter(prefix="/stream", tags=["stream"])
 
 
-async def event_generator(goal_id: int | None, db: Session) -> AsyncGenerator[str, None]:
+async def event_generator(goal_id: int | None = None) -> AsyncGenerator[str, None]:
     """Yield simulated real-time SSE events for live agent execution."""
     # Initial handshake
     yield f"event: connected\ndata: {json.dumps({'status': 'connected', 'timestamp': time.time()})}\n\n"
@@ -54,11 +50,10 @@ async def event_generator(goal_id: int | None, db: Session) -> AsyncGenerator[st
 @router.get("/agent-events")
 async def stream_agent_events(
     goal_id: int | None = Query(default=None),
-    db: Session = Depends(get_db),
 ) -> StreamingResponse:
     """Stream real-time SSE agent deliberative events and telemetry."""
     return StreamingResponse(
-        event_generator(goal_id, db),
+        event_generator(goal_id),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

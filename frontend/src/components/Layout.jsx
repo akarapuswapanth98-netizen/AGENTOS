@@ -28,14 +28,25 @@ import {
   BarChart3,
   Volume2,
   VolumeX,
+  Sun,
+  Moon,
+  Briefcase,
+  Target,
+  GitBranch,
+  Shield,
+  Terminal,
 } from 'lucide-react'
 import { useSound } from '../context/SoundContext.jsx'
+import { useTheme } from '../context/ThemeContext.jsx'
+import ScrollProgress from './ScrollProgress.jsx'
+import Footer from './Footer.jsx'
 
 export default function Layout({ children }) {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const { soundEnabled, toggleSound, playClick } = useSound()
+  const { theme, toggleTheme, isDark } = useTheme()
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [cmdOpen, setCmdOpen] = useState(false)
@@ -61,18 +72,20 @@ export default function Layout({ children }) {
 
   const navLinks = [
     { label: 'Dashboard', path: '/', icon: LayoutDashboard },
-    { label: 'Agent Builder', path: '/builder', icon: BrainCircuit, badge: 'NEW' },
+    { label: 'Job Matching', path: '/job-match', icon: Briefcase, badge: 'NEW' },
+    { label: 'Skill Gap Matrix', path: '/skills', icon: Target },
+    { label: 'How It Works', path: '/how-it-works', icon: GitBranch },
+    { label: 'Prompt Architecture', path: '/prompt-engineering', icon: Terminal },
+    { label: 'Agent Builder', path: '/builder', icon: BrainCircuit, badge: 'V2' },
     { label: 'Live Monitoring', path: '/monitoring', icon: Activity, badge: 'LIVE' },
     { label: 'Analytics', path: '/analytics', icon: BarChart3 },
-    { label: 'Agent Templates', path: '/marketplace', icon: Boxes },
-    { label: 'Knowledge Base', path: '/knowledge', icon: Database },
-    { label: 'Schedules', path: '/schedules', icon: Clock },
-    { label: 'Workspaces', path: '/workspaces', icon: Share2 },
     { label: 'Interviews', path: '/interviews', icon: Users2 },
     { label: 'Resume', path: '/resume', icon: FileText },
+    { label: 'Workspaces', path: '/workspaces', icon: Share2 },
     { label: 'Spaced Review', path: '/review', icon: RotateCcw },
     { label: 'Quiz', path: '/quiz', icon: Sparkles },
     { label: 'Weekly Summary', path: '/weekly', icon: Calendar },
+    { label: 'About & Ethics', path: '/about', icon: Shield },
     { label: 'Settings', path: '/settings', icon: Settings },
   ]
 
@@ -83,6 +96,7 @@ export default function Layout({ children }) {
 
   return (
     <div className="min-h-screen bg-[#060810] text-slate-100 flex flex-col font-sans selection:bg-neon-violet selection:text-white">
+      <ScrollProgress />
       {/* Background Cyber Grid Overlay */}
       <div className="fixed inset-0 cyber-grid pointer-events-none opacity-40 z-0" />
 
@@ -90,7 +104,7 @@ export default function Layout({ children }) {
       <CommandPalette isOpen={cmdOpen} onClose={() => setCmdOpen(false)} />
 
       {/* Top Navigation Bar */}
-      <header className="sticky top-0 z-30 border-b border-indigo-500/20 bg-[#070a12]/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-30 border-b border-white/10 bg-[#080c15]/85 backdrop-blur-2xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-3">
             <button
@@ -102,14 +116,14 @@ export default function Layout({ children }) {
             </button>
 
             <Link to="/" className="flex items-center gap-2.5 group">
-              <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 via-violet-600 to-cyan-400 shadow-glow-sm">
+              <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 to-blue-500 shadow-depth-card border border-white/20">
                 <span className="font-display font-extrabold text-white text-lg">A</span>
-                <span className="absolute -inset-0.5 rounded-xl bg-gradient-to-tr from-indigo-500 to-cyan-400 opacity-0 group-hover:opacity-40 blur transition duration-300" />
+                <span className="absolute -inset-0.5 rounded-xl bg-gradient-to-tr from-indigo-500 to-blue-400 opacity-0 group-hover:opacity-30 blur transition duration-300" />
               </div>
               <div>
                 <span className="gradient-text font-display text-xl font-bold tracking-tight">AGENTOS</span>
-                <span className="hidden sm:inline-block ml-2 rounded-full border border-indigo-500/30 bg-indigo-950/60 px-2 py-0.5 text-[10px] font-semibold text-indigo-300 tracking-wider">
-                  CYBER OS v2.0
+                <span className="hidden sm:inline-block ml-2 rounded-full border border-white/10 bg-slate-900/80 px-2 py-0.5 text-[10px] font-mono text-slate-300">
+                  SPATIAL OS
                 </span>
               </div>
             </Link>
@@ -119,11 +133,11 @@ export default function Layout({ children }) {
           <div className="hidden sm:flex items-center">
             <button
               onClick={() => setCmdOpen(true)}
-              className="flex items-center gap-3 rounded-xl border border-indigo-500/25 bg-slate-900/60 px-3.5 py-1.5 text-xs text-slate-400 hover:border-indigo-500/50 hover:text-slate-200 transition shadow-inner"
+              className="flex items-center gap-3 rounded-xl border border-white/10 bg-slate-900/60 px-3.5 py-1.5 text-xs text-slate-400 hover:border-white/20 hover:text-slate-200 transition shadow-inner"
             >
               <Search className="h-3.5 w-3.5 text-indigo-400" />
               <span>Search commands, agents, workflows...</span>
-              <kbd className="rounded border border-indigo-500/30 bg-slate-800/80 px-1.5 py-0.5 text-[10px] text-indigo-300 font-mono">
+              <kbd className="rounded border border-white/10 bg-slate-800/80 px-1.5 py-0.5 text-[10px] text-slate-300 font-mono">
                 ⌘K
               </kbd>
             </button>
@@ -147,10 +161,20 @@ export default function Layout({ children }) {
               className={`p-2 rounded-xl border transition ${
                 soundEnabled
                   ? 'border-cyan-500/40 bg-cyan-950/40 text-cyan-400 shadow-glow-sm'
-                  : 'border-slate-800 bg-slate-900/60 text-slate-500 hover:text-slate-300'
+                  : 'border-white/10 bg-slate-900/60 text-slate-400 hover:text-slate-200'
               }`}
             >
               {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+            </button>
+
+            {/* Theme Toggle Button */}
+            <button
+              onClick={toggleTheme}
+              title={isDark ? 'Switch to Light mode' : 'Switch to Dark mode'}
+              aria-label={isDark ? 'Switch to Light mode' : 'Switch to Dark mode'}
+              className="p-2 rounded-xl border border-white/10 bg-slate-900/60 text-slate-300 hover:text-white transition shadow-sm"
+            >
+              {isDark ? <Sun className="h-4 w-4 text-amber-300" /> : <Moon className="h-4 w-4 text-indigo-400" />}
             </button>
 
             {user ? (
@@ -196,7 +220,7 @@ export default function Layout({ children }) {
             collapsed ? 'w-18' : 'w-56'
           }`}
         >
-          <div className="sticky top-22 flex flex-col justify-between cyber-glass rounded-2xl p-3 border border-indigo-500/20 shadow-glass-panel min-h-[calc(100vh-8rem)]">
+          <div className="sticky top-22 flex flex-col justify-between cyber-glass rounded-2xl p-3 border border-white/10 shadow-glass-panel min-h-[calc(100vh-8rem)]">
             <nav className="space-y-1.5">
               {navLinks.map((item) => {
                 const active = isCurrent(item.path)
@@ -207,7 +231,7 @@ export default function Layout({ children }) {
                     to={item.path}
                     className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
                       active
-                        ? 'bg-gradient-to-r from-indigo-600/90 to-violet-600/80 text-white shadow-glow-sm border border-indigo-400/40'
+                        ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-depth-card border border-white/20'
                         : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-100 border border-transparent'
                     }`}
                     title={collapsed ? item.label : undefined}
@@ -218,10 +242,10 @@ export default function Layout({ children }) {
                         <span className="truncate">{item.label}</span>
                         {item.badge && (
                           <span
-                            className={`rounded-full px-1.5 py-0.2 text-[9px] font-bold tracking-wider ${
+                            className={`rounded-full px-1.5 py-0.2 text-[9px] font-bold tracking-wider font-mono ${
                               item.badge === 'LIVE'
                                 ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 animate-pulse'
-                                : 'bg-indigo-500/20 text-indigo-300 border border-indigo-400/40'
+                                : 'bg-indigo-500/20 text-indigo-300 border border-indigo-400/30'
                             }`}
                           >
                             {item.badge}
@@ -303,7 +327,10 @@ export default function Layout({ children }) {
         )}
 
         {/* Page Content Viewport */}
-        <main className="min-w-0 flex-1">{children}</main>
+        <main className="min-w-0 flex-1">
+          {children}
+          <Footer />
+        </main>
       </div>
     </div>
   )
