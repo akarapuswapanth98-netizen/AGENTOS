@@ -3,14 +3,15 @@ import { Link, useNavigate } from 'react-router-dom'
 import { getErrorMessage } from '../api/client.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
+import { isSupabaseConfigured } from '../lib/supabase.js'
 import AuthShell from '../components/AuthShell.jsx'
 import ErrorBanner from '../components/ErrorBanner.jsx'
-import { LogIn, Sparkles, Mail, Lock, Wand2 } from 'lucide-react'
+import { LogIn, Sparkles, Mail, Lock, Wand2, Info } from 'lucide-react'
 import { loginSchema } from '../lib/validators.js'
 
 export default function Login() {
   const navigate = useNavigate()
-  const { login, loginWithOAuth, sendMagicLink } = useAuth()
+  const { login, register, loginWithOAuth, sendMagicLink } = useAuth()
   const toast = useToast()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -18,6 +19,30 @@ export default function Login() {
   const [busy, setBusy] = useState(false)
   const [magicLinkSent, setMagicLinkSent] = useState(false)
   const [mode, setMode] = useState('password') // 'password' | 'magic'
+
+  async function handleDemoAccess() {
+    setBusy(true)
+    setError('')
+    try {
+      const demoEmail = 'architect@agentos.ai'
+      const demoPass = 'cybernet-os-2026'
+      try {
+        await login(demoEmail, demoPass)
+      } catch {
+        if (register) {
+          await register('Agent Architect', demoEmail, demoPass)
+        }
+      }
+      toast.success('Welcome, Agent Architect!')
+      navigate('/')
+    } catch {
+      localStorage.setItem('agentos_token', 'demo-session-token-' + Date.now())
+      toast.success('Welcome to Agent OS Sandbox!')
+      navigate('/')
+    } finally {
+      setBusy(false)
+    }
+  }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -60,6 +85,10 @@ export default function Login() {
 
   async function handleOAuth(provider) {
     setError('')
+    if (!isSupabaseConfigured) {
+      toast.info(`To authenticate with ${provider}, configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel. Use 1-Click Demo Access below to explore now!`)
+      return
+    }
     try {
       await loginWithOAuth(provider)
     } catch (err) {
@@ -85,6 +114,28 @@ export default function Login() {
       }
     >
       <ErrorBanner message={error} />
+
+      {/* 1-Click Sandbox Demo Access */}
+      <button
+        type="button"
+        onClick={handleDemoAccess}
+        disabled={busy}
+        className="w-full mb-4 flex items-center justify-center gap-2 rounded-xl border border-cyan-500/40 bg-gradient-to-r from-cyan-950/40 via-indigo-950/40 to-cyan-950/40 py-2.5 text-xs font-semibold text-cyan-300 hover:text-white hover:border-cyan-400/70 hover:shadow-glow-cyan transition duration-200"
+      >
+        <Sparkles className="h-4 w-4 text-cyan-400 animate-pulse" />
+        <span>1-Click Demo Architect Access</span>
+        <span className="text-[10px] text-cyan-400/80 bg-cyan-900/40 px-1.5 py-0.5 rounded-md font-mono">INSTANT</span>
+      </button>
+
+      {/* OAuth Notice when keys pending */}
+      {!isSupabaseConfigured && (
+        <div className="mb-4 flex items-start gap-2 rounded-xl border border-indigo-500/20 bg-indigo-950/20 p-2.5 text-[11px] text-slate-300">
+          <Info className="h-4 w-4 text-indigo-400 shrink-0 mt-0.5" />
+          <p className="leading-relaxed">
+            <strong className="text-white">Live OAuth:</strong> Requires <code className="text-cyan-300 font-mono">VITE_SUPABASE_URL</code> in Vercel settings. You can also sign in with email/password or use 1-Click Access above.
+          </p>
+        </div>
+      )}
 
       {/* OAuth Buttons */}
       <div className="grid grid-cols-2 gap-3 mb-5">

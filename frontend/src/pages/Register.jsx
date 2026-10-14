@@ -3,9 +3,10 @@ import { Link, useNavigate } from 'react-router-dom'
 import { getErrorMessage } from '../api/client.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
+import { isSupabaseConfigured } from '../lib/supabase.js'
 import AuthShell from '../components/AuthShell.jsx'
 import ErrorBanner from '../components/ErrorBanner.jsx'
-import { UserPlus, Sparkles, CheckCircle2, ShieldCheck } from 'lucide-react'
+import { UserPlus, Sparkles, CheckCircle2, ShieldCheck, Info } from 'lucide-react'
 import { registerSchema } from '../lib/validators.js'
 
 export default function Register() {
@@ -53,6 +54,10 @@ export default function Register() {
 
   async function handleOAuth(provider) {
     setError('')
+    if (!isSupabaseConfigured) {
+      toast.info(`To authenticate with ${provider}, configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel. You can register with email and password below!`)
+      return
+    }
     try {
       await loginWithOAuth(provider)
     } catch (err) {
@@ -95,6 +100,16 @@ export default function Register() {
         </div>
       ) : (
         <>
+          {/* OAuth Notice when keys pending */}
+          {!isSupabaseConfigured && (
+            <div className="mb-4 flex items-start gap-2 rounded-xl border border-indigo-500/20 bg-indigo-950/20 p-2.5 text-[11px] text-slate-300">
+              <Info className="h-4 w-4 text-indigo-400 shrink-0 mt-0.5" />
+              <p className="leading-relaxed">
+                <strong className="text-white">Live OAuth:</strong> Requires <code className="text-cyan-300 font-mono">VITE_SUPABASE_URL</code> in Vercel settings. You can register with email/password below.
+              </p>
+            </div>
+          )}
+
           {/* OAuth Buttons */}
           <div className="grid grid-cols-2 gap-3 mb-5">
             <button
