@@ -8,7 +8,7 @@ function resolveBaseUrl() {
       return `${protocol}//${hostname}:8000`
     }
   }
-  return 'http://127.0.0.1:8000'
+  return 'https://agentos-backend-ebon.vercel.app'
 }
 
 // Base URL dynamically matches localhost or 127.0.0.1 depending on current window origin
