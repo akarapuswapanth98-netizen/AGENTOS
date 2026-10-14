@@ -11,6 +11,7 @@ import ReadinessChart from '../components/ReadinessChart.jsx'
 import Reveal from '../components/Reveal.jsx'
 import Skeleton from '../components/Skeleton.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
+import { useWorkspace } from '../context/WorkspaceContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 import {
   Sparkles,
@@ -128,6 +129,7 @@ export default function Dashboard() {
   const [params] = useSearchParams()
   const prefillSkills = params.get('skills') || ''
   const { user } = useAuth()
+  const { currentWorkspace } = useWorkspace()
   const toast = useToast()
   const [goals, setGoals] = useState([])
   const [dash, setDash] = useState(null)
@@ -218,11 +220,20 @@ export default function Dashboard() {
         <div className="relative grid gap-4 p-6 sm:grid-cols-[1fr_280px] lg:grid-cols-[1fr_340px] sm:p-8">
           <div className="flex flex-col justify-between">
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="flex h-2 w-2 rounded-full bg-cyan-400 animate-ping" />
                 <p className="text-xs font-mono font-semibold uppercase tracking-widest text-cyan-300">
                   AI Career Operating System
                 </p>
+                {currentWorkspace && (
+                  <Link
+                    to="/workspaces"
+                    className="ml-auto sm:ml-2 rounded-full border border-indigo-500/30 bg-indigo-950/40 px-2.5 py-0.5 text-[10px] font-mono text-indigo-300 hover:border-indigo-400/50 hover:bg-indigo-900/40 transition"
+                    title="Active Workspace Tenant"
+                  >
+                    Tenant: <span className="text-white font-semibold">{currentWorkspace.name}</span>
+                  </Link>
+                )}
               </div>
               <h1 className="mt-2 font-display text-3xl font-extrabold sm:text-4xl text-white">
                 {greeting()}{user ? `, ${user.name}` : ''}

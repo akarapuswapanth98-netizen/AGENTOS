@@ -81,31 +81,43 @@ export default function Interviews() {
         </p>
 
         {/* Launcher Form */}
-        <form onSubmit={handleStart} className="mt-6 flex flex-wrap items-end gap-3">
-          <div className="min-w-0 flex-1">
-            <label className="mb-1.5 block text-xs font-semibold text-slate-300">
-              Select Career Blueprint for Role Context:
-            </label>
-            <select
-              value={goalId}
-              onChange={(e) => setGoalId(e.target.value)}
-              className="w-full rounded-xl border border-indigo-500/25 bg-[#090d18] px-3.5 py-2.5 text-xs text-slate-100 focus:border-indigo-400 focus:outline-none"
+        {goals.length === 0 ? (
+          <div className="mt-6 p-4 rounded-2xl bg-indigo-950/30 border border-indigo-500/20 text-xs text-slate-300 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <span>You need an active career blueprint to configure role-tailored interview rounds.</span>
+            <Link
+              to="/marketplace"
+              className="btn-cyber-primary rounded-xl px-4 py-2 text-xs font-semibold shrink-0"
             >
-              {goals.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.title} ({g.target_role})
-                </option>
-              ))}
-            </select>
+              Clone Blueprint from Marketplace →
+            </Link>
           </div>
-          <button
-            disabled={starting || !goalId}
-            className="btn-cyber-primary rounded-xl px-5 py-2.5 text-xs font-semibold flex items-center gap-2 shrink-0 disabled:opacity-50"
-          >
-            <Play className="h-4 w-4" />
-            {starting ? 'Synthesizing Rounds…' : 'Launch Simulation'}
-          </button>
-        </form>
+        ) : (
+          <form onSubmit={handleStart} className="mt-6 flex flex-wrap items-end gap-3">
+            <div className="min-w-0 flex-1">
+              <label className="mb-1.5 block text-xs font-semibold text-slate-300">
+                Select Career Blueprint for Role Context:
+              </label>
+              <select
+                value={goalId}
+                onChange={(e) => setGoalId(e.target.value)}
+                className="w-full rounded-xl border border-indigo-500/25 bg-[#090d18] px-3.5 py-2.5 text-xs text-slate-100 focus:border-indigo-400 focus:outline-none"
+              >
+                {goals.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.title} ({g.target_role})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button
+              disabled={starting || !goalId}
+              className="btn-cyber-primary rounded-xl px-5 py-2.5 text-xs font-semibold flex items-center gap-2 shrink-0 disabled:opacity-50"
+            >
+              <Play className="h-4 w-4" />
+              {starting ? 'Synthesizing Rounds…' : 'Launch Simulation'}
+            </button>
+          </form>
+        )}
       </div>
 
       <ErrorBanner message={error} onRetry={load} />

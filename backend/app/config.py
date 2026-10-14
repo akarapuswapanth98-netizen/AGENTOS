@@ -66,7 +66,7 @@ JWT_EXPIRE_MINUTES: int = int(_first_set("JWT_EXPIRE_MINUTES", "ACCESS_TOKEN_MIN
 ACCESS_TOKEN_MINUTES: int = JWT_EXPIRE_MINUTES  # legacy alias
 LLM_CALLS_PER_HOUR: int = int(os.getenv("LLM_CALLS_PER_HOUR", "60"))
 CORS_ORIGINS: list[str] = _parse_origins(
-    os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000")
+    os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000,https://agentos-six-omega.vercel.app")
 )
 
 
