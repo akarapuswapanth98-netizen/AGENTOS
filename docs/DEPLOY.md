@@ -29,6 +29,19 @@ Follow these steps to initialize your Supabase cloud backend:
    - Copy:
      - **Project URL** (e.g. `https://xyzcompany.supabase.co`)
      - **Project API Anon Key** (`anon` `public`)
+     - **Service Role Key** (`service_role` secret for Edge Functions)
+
+4. **Deploy Supabase Edge Functions** (Optional / Cloud Agent Runners):
+   Using the [Supabase CLI](https://supabase.com/docs/guides/cli):
+   ```bash
+   # Link your project
+   supabase link --project-ref <your-project-ref>
+
+   # Deploy edge functions
+   supabase functions deploy run-agent
+   supabase functions deploy embed-document
+   supabase functions deploy webhook-trigger
+   ```
 
 ---
 
