@@ -4,6 +4,7 @@ import Layout from './components/Layout.jsx'
 import PageFade from './components/PageFade.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
+import { WorkspaceProvider } from './context/WorkspaceContext.jsx'
 import { ToastProvider } from './context/ToastContext.jsx'
 import { SoundProvider } from './context/SoundContext.jsx'
 import { ThemeProvider } from './context/ThemeContext.jsx'
@@ -12,9 +13,11 @@ import GoalDetail from './pages/GoalDetail.jsx'
 import InterviewRunner from './pages/InterviewRunner.jsx'
 import Interviews from './pages/Interviews.jsx'
 import Login from './pages/Login.jsx'
+import Register from './pages/Register.jsx'
+import ForgotPassword from './pages/ForgotPassword.jsx'
+import ResetPassword from './pages/ResetPassword.jsx'
 import NotFound from './pages/NotFound.jsx'
 import Quiz from './pages/Quiz.jsx'
-import Register from './pages/Register.jsx'
 import Report from './pages/Report.jsx'
 import Resume from './pages/Resume.jsx'
 import Review from './pages/Review.jsx'
@@ -43,6 +46,8 @@ function AnimatedRoutes() {
       <Routes location={location} key={location.pathname}>
         <Route path="/login" element={<PageFade><Login /></PageFade>} />
         <Route path="/register" element={<PageFade><Register /></PageFade>} />
+        <Route path="/forgot-password" element={<PageFade><ForgotPassword /></PageFade>} />
+        <Route path="/reset-password" element={<PageFade><ResetPassword /></PageFade>} />
         <Route path="/how-it-works" element={<PageFade><HowItWorks /></PageFade>} />
         <Route path="/prompt-engineering" element={<PageFade><PromptEngineering /></PageFade>} />
         <Route path="/about" element={<PageFade><About /></PageFade>} />
@@ -77,15 +82,17 @@ function AnimatedRoutes() {
 export default function App() {
   return (
     <AuthProvider>
-      <ThemeProvider>
-        <ToastProvider>
-          <SoundProvider>
-            <Layout>
-              <AnimatedRoutes />
-            </Layout>
-          </SoundProvider>
-        </ToastProvider>
-      </ThemeProvider>
+      <WorkspaceProvider>
+        <ThemeProvider>
+          <ToastProvider>
+            <SoundProvider>
+              <Layout>
+                <AnimatedRoutes />
+              </Layout>
+            </SoundProvider>
+          </ToastProvider>
+        </ThemeProvider>
+      </WorkspaceProvider>
     </AuthProvider>
   )
 }

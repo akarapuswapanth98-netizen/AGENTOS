@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api, getErrorMessage } from '../api/client.js'
+import { supabase, isSupabaseConfigured } from '../lib/supabase.js'
 import ErrorBanner from '../components/ErrorBanner.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
@@ -11,33 +12,87 @@ import {
   ShieldAlert,
   Save,
   Trash2,
+  Camera,
+  Upload,
+  Loader2,
 } from 'lucide-react'
 
 export default function Settings() {
   const navigate = useNavigate()
-  const { user, setUser, logout } = useAuth()
+  const { user, updateProfile, updatePassword, logout } = useAuth()
   const toast = useToast()
   const [name, setName] = useState(user?.name || '')
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || '')
   const [error, setError] = useState('')
   const [currentPw, setCurrentPw] = useState('')
   const [newPw, setNewPw] = useState('')
   const [delPw, setDelPw] = useState('')
   const [delConfirm, setDelConfirm] = useState('')
   const [busy, setBusy] = useState(false)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const fileInputRef = useRef(null)
 
   useEffect(() => {
     if (user?.name) setName(user.name)
-  }, [user?.name])
+    if (user?.avatar_url) setAvatarUrl(user.avatar_url)
+  }, [user?.name, user?.avatar_url])
 
   const inputCls =
     'w-full rounded-xl border border-indigo-500/25 bg-[#090d18] px-3.5 py-2.5 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400/40 transition'
 
-  async function handleName(e) {
+  async function handleAvatarUpload(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Avatar file size must be under 2MB')
+      return
+    }
+
+    setUploadingAvatar(true)
+    setError('')
+    try {
+      if (isSupabaseConfigured && user?.id) {
+        const fileExt = file.name.split('.').pop()
+        const filePath = `${user.id}/${Date.now()}.${fileExt}`
+
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(filePath, file, { upsert: true })
+
+        if (uploadError) throw uploadError
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(filePath)
+
+        setAvatarUrl(publicUrl)
+        await updateProfile({ name: name.trim(), avatar_url: publicUrl })
+        toast.success('Avatar updated and persisted')
+      } else {
+        // Fallback local preview
+        const reader = new FileReader()
+        reader.onload = (event) => {
+          setAvatarUrl(event.target.result)
+          toast.success('Avatar updated (local preview)')
+        }
+        reader.readAsDataURL(file)
+      }
+    } catch (err) {
+      const msg = err.message || 'Failed to upload avatar'
+      setError(msg)
+      toast.error(msg)
+    } finally {
+      setUploadingAvatar(false)
+    }
+  }
+
+  async function handleProfileSave(e) {
     e.preventDefault()
     setBusy(true)
+    setError('')
     try {
-      const updated = await api.updateMe({ name: name.trim() })
-      setUser(updated)
+      await updateProfile({ name: name.trim(), avatar_url: avatarUrl })
       toast.success('Agent Architect profile updated')
     } catch (err) {
       const msg = getErrorMessage(err, 'Could not update profile name')
@@ -50,12 +105,21 @@ export default function Settings() {
 
   async function handlePassword(e) {
     e.preventDefault()
+    if (newPw.length < 8) {
+      setError('Password must be at least 8 characters')
+      return
+    }
     setBusy(true)
+    setError('')
     try {
-      await api.changePassword({ current_password: currentPw, new_password: newPw })
+      if (isSupabaseConfigured) {
+        await updatePassword(newPw)
+      } else {
+        await api.changePassword({ current_password: currentPw, new_password: newPw })
+      }
       setCurrentPw('')
       setNewPw('')
-      toast.success('Security credentials rotated')
+      toast.success('Security credentials updated')
     } catch (err) {
       const msg = getErrorMessage(err, 'Could not update password')
       setError(msg)
@@ -93,21 +157,56 @@ export default function Settings() {
           Operating System Settings
         </h1>
         <p className="mt-1 text-xs text-slate-400 font-mono">
-          PROFILE PARAMETERS • CREDENTIAL SECURITY • PURGE CONTROLS
+          PROFILE PARAMETERS • STORAGE ASSETS • CREDENTIAL SECURITY • PURGE CONTROLS
         </p>
       </div>
 
       <ErrorBanner message={error} />
 
-      {/* Profile Form */}
+      {/* Profile & Avatar Form */}
       <form
-        onSubmit={handleName}
+        onSubmit={handleProfileSave}
         className="space-y-4 rounded-3xl cyber-glass border border-indigo-500/25 p-6 shadow-glass-panel"
       >
         <div className="flex items-center gap-2 border-b border-indigo-500/15 pb-3">
           <User className="h-4 w-4 text-cyan-400" />
           <h2 className="font-display text-base font-bold text-white">Agent Architect Identity</h2>
         </div>
+
+        {/* Avatar Upload */}
+        <div className="flex items-center gap-4 py-2">
+          <div className="relative group">
+            <div className="h-16 w-16 rounded-2xl bg-indigo-950/60 border border-indigo-500/40 flex items-center justify-center text-lg font-bold text-white overflow-hidden shadow-inner">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
+              ) : (
+                <span>{(name || user?.email || 'A').slice(0, 2).toUpperCase()}</span>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute -bottom-1 -right-1 rounded-lg bg-indigo-600 p-1.5 text-white hover:bg-indigo-500 shadow transition"
+              title="Upload Avatar Image"
+            >
+              {uploadingAvatar ? <Loader2 className="h-3 w-3 animate-spin" /> : <Camera className="h-3 w-3" />}
+            </button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleAvatarUpload}
+              accept="image/*"
+              className="hidden"
+            />
+          </div>
+          <div>
+            <div className="text-xs font-semibold text-white">Avatar Photo</div>
+            <p className="text-[11px] text-slate-400">
+              Persisted in Supabase <code className="text-indigo-300">avatars</code> bucket. Max 2MB.
+            </p>
+          </div>
+        </div>
+
         <div>
           <label className="text-xs text-slate-400 block mb-1">Display Name</label>
           <input
@@ -118,8 +217,18 @@ export default function Settings() {
             required
           />
         </div>
+
+        <div>
+          <label className="text-xs text-slate-400 block mb-1">Email Address (Read-only)</label>
+          <input
+            className={`${inputCls} opacity-60 cursor-not-allowed`}
+            value={user?.email || ''}
+            disabled
+          />
+        </div>
+
         <button
-          disabled={busy}
+          disabled={busy || uploadingAvatar}
           className="btn-cyber-primary rounded-xl px-4 py-2 text-xs font-semibold flex items-center gap-2 disabled:opacity-50"
         >
           <Save className="h-3.5 w-3.5" />
@@ -136,17 +245,19 @@ export default function Settings() {
           <Key className="h-4 w-4 text-violet-400" />
           <h2 className="font-display text-base font-bold text-white">Access Credentials</h2>
         </div>
-        <div>
-          <label className="text-xs text-slate-400 block mb-1">Current Password</label>
-          <input
-            className={inputCls}
-            type="password"
-            value={currentPw}
-            onChange={(e) => setCurrentPw(e.target.value)}
-            placeholder="Current authentication password"
-            required
-          />
-        </div>
+        {!isSupabaseConfigured && (
+          <div>
+            <label className="text-xs text-slate-400 block mb-1">Current Password</label>
+            <input
+              className={inputCls}
+              type="password"
+              value={currentPw}
+              onChange={(e) => setCurrentPw(e.target.value)}
+              placeholder="Current authentication password"
+              required
+            />
+          </div>
+        )}
         <div>
           <label className="text-xs text-slate-400 block mb-1">New Password (Min 8 characters)</label>
           <input
@@ -178,7 +289,7 @@ export default function Settings() {
           <h2 className="font-display text-base font-bold text-red-400">Purge Agent OS Account</h2>
         </div>
         <p className="text-xs text-slate-300 leading-relaxed">
-          Permanently destroys your user account, career blueprints, task submissions, interview logs, and test metrics. This action is irrevocable.
+          Permanently destroys your user account, agent pipelines, vector embeddings, and telemetry logs. This action is irrevocable.
         </p>
         <div>
           <label className="text-xs text-slate-400 block mb-1">Confirm with Password</label>

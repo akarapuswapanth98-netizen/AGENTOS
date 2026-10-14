@@ -38,6 +38,7 @@ import {
 } from 'lucide-react'
 import { useSound } from '../context/SoundContext.jsx'
 import { useTheme } from '../context/ThemeContext.jsx'
+import { useWorkspace } from '../context/WorkspaceContext.jsx'
 import ScrollProgress from './ScrollProgress.jsx'
 import Footer from './Footer.jsx'
 
@@ -45,6 +46,7 @@ export default function Layout({ children }) {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuth()
+  const { currentWorkspace, currentRole } = useWorkspace()
   const { soundEnabled, toggleSound, playClick } = useSound()
   const { theme, toggleTheme, isDark } = useTheme()
   const [collapsed, setCollapsed] = useState(false)
@@ -179,14 +181,49 @@ export default function Layout({ children }) {
 
             {user ? (
               <div className="flex items-center gap-2.5">
-                <div className="hidden sm:flex flex-col text-right">
-                  <span className="text-xs font-semibold text-slate-200">{user.name}</span>
-                  <span className="text-[10px] text-indigo-400 font-mono">AGENT ARCHITECT</span>
-                </div>
+                {/* Workspace pill */}
+                <Link
+                  to="/workspaces"
+                  className="hidden md:flex items-center gap-1.5 rounded-xl border border-indigo-500/25 bg-indigo-950/30 px-2.5 py-1 text-xs text-indigo-300 hover:border-indigo-400/50 hover:bg-indigo-900/40 transition"
+                  title="Current Active Workspace (Click to switch)"
+                >
+                  <Share2 className="h-3 w-3 text-cyan-400" />
+                  <span className="font-semibold truncate max-w-[120px]">
+                    {currentWorkspace?.name || 'Workspace'}
+                  </span>
+                </Link>
+
+                {/* User avatar & name */}
+                <Link
+                  to="/settings"
+                  className="flex items-center gap-2 rounded-xl p-1 hover:bg-white/5 transition"
+                  title="Account Settings"
+                >
+                  <div className="h-7 w-7 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 p-[1px] shadow-sm">
+                    <div className="h-full w-full rounded-[10px] bg-[#090d18] flex items-center justify-center overflow-hidden">
+                      {user.avatar_url ? (
+                        <img src={user.avatar_url} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="text-[10px] font-bold text-indigo-200">
+                          {(user.name || user.email || 'A').slice(0, 2).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="hidden sm:flex flex-col text-left">
+                    <span className="text-xs font-semibold text-slate-200 truncate max-w-[100px] leading-tight">
+                      {user.name}
+                    </span>
+                    <span className="text-[9px] text-indigo-400 font-mono uppercase leading-tight">
+                      {currentRole || 'Architect'}
+                    </span>
+                  </div>
+                </Link>
+
                 <button
                   onClick={handleLogout}
                   title="Logout"
-                  className="flex items-center gap-1.5 rounded-xl border border-red-500/25 bg-red-950/20 px-3 py-1.5 text-xs font-semibold text-red-400 hover:bg-red-900/40 hover:border-red-500/40 transition"
+                  className="flex items-center gap-1.5 rounded-xl border border-red-500/25 bg-red-950/20 px-2.5 py-1.5 text-xs font-semibold text-red-400 hover:bg-red-900/40 hover:border-red-500/40 transition"
                 >
                   <LogOut className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline">Logout</span>
