@@ -80,6 +80,8 @@ export default function Layout({ children }) {
     { label: 'Prompt Architecture', path: '/prompt-engineering', icon: Terminal },
     { label: 'Agent Builder', path: '/builder', icon: BrainCircuit, badge: 'V2' },
     { label: 'Live Monitoring', path: '/monitoring', icon: Activity, badge: 'LIVE' },
+    { label: 'Knowledge Base', path: '/knowledge', icon: Database },
+    { label: 'Agent Schedules', path: '/schedules', icon: Clock },
     { label: 'Analytics', path: '/analytics', icon: BarChart3 },
     { label: 'Interviews', path: '/interviews', icon: Users2 },
     { label: 'Resume', path: '/resume', icon: FileText },

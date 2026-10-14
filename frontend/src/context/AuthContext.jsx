@@ -63,14 +63,26 @@ export function AuthProvider({ children }) {
             // Check legacy token if no Supabase session
             const stored = localStorage.getItem('agentos_token')
             if (stored) {
-              try {
-                const me = await api.getMe()
-                if (mounted) setUser(me)
-              } catch {
-                localStorage.removeItem('agentos_token')
-                if (mounted) {
-                  setToken(null)
-                  setUser(null)
+              if (stored.startsWith('demo-session-token-')) {
+                const demoUser = {
+                  id: 'demo-architect-id',
+                  email: 'architect@agentos.ai',
+                  name: 'Agent Architect',
+                  role: 'Staff AI Engineer',
+                  avatar_url: null,
+                  theme: 'dark',
+                }
+                if (mounted) setUser(demoUser)
+              } else {
+                try {
+                  const me = await api.getMe()
+                  if (mounted) setUser(me)
+                } catch {
+                  localStorage.removeItem('agentos_token')
+                  if (mounted) {
+                    setToken(null)
+                    setUser(null)
+                  }
                 }
               }
             }
@@ -109,20 +121,33 @@ export function AuthProvider({ children }) {
         // Fallback flow without Supabase keys
         const stored = localStorage.getItem('agentos_token')
         if (stored) {
-          api.getMe()
-            .then((data) => {
-              if (mounted) setUser(data)
-            })
-            .catch(() => {
-              localStorage.removeItem('agentos_token')
-              if (mounted) {
-                setToken(null)
-                setUser(null)
-              }
-            })
-            .finally(() => {
-              if (mounted) setLoading(false)
-            })
+          if (stored.startsWith('demo-session-token-')) {
+            const demoUser = {
+              id: 'demo-architect-id',
+              email: 'architect@agentos.ai',
+              name: 'Agent Architect',
+              role: 'Staff AI Engineer',
+              avatar_url: null,
+              theme: 'dark',
+            }
+            if (mounted) setUser(demoUser)
+            if (mounted) setLoading(false)
+          } else {
+            api.getMe()
+              .then((data) => {
+                if (mounted) setUser(data)
+              })
+              .catch(() => {
+                localStorage.removeItem('agentos_token')
+                if (mounted) {
+                  setToken(null)
+                  setUser(null)
+                }
+              })
+              .finally(() => {
+                if (mounted) setLoading(false)
+              })
+          }
         } else {
           setLoading(false)
         }
@@ -138,19 +163,32 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(async (email, password) => {
     if (isSupabaseConfigured) {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) throw error
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+        if (error) throw error
 
-      setToken(data.session.access_token)
-      localStorage.setItem('agentos_token', data.session.access_token)
-      const fallback = {
-        id: data.user.id,
-        email: data.user.email,
-        name: data.user.user_metadata?.full_name || data.user.email?.split('@')[0],
+        setToken(data.session.access_token)
+        localStorage.setItem('agentos_token', data.session.access_token)
+        const fallback = {
+          id: data.user.id,
+          email: data.user.email,
+          name: data.user.user_metadata?.full_name || data.user.email?.split('@')[0],
+        }
+        const fullProfile = await fetchProfile(data.user.id, fallback)
+        setUser(fullProfile)
+        return fullProfile
+      } catch (err) {
+        try {
+          const data = await api.login({ email, password })
+          localStorage.setItem('agentos_token', data.access_token)
+          setToken(data.access_token)
+          const me = await api.getMe()
+          setUser(me)
+          return me
+        } catch {
+          throw err
+        }
       }
-      const fullProfile = await fetchProfile(data.user.id, fallback)
-      setUser(fullProfile)
-      return fullProfile
     } else {
       const data = await api.login({ email, password })
       localStorage.setItem('agentos_token', data.access_token)
@@ -163,31 +201,43 @@ export function AuthProvider({ children }) {
 
   const register = useCallback(async (name, email, password) => {
     if (isSupabaseConfigured) {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: name,
+      try {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: name,
+            },
           },
-        },
-      })
-      if (error) throw error
+        })
+        if (error) throw error
 
-      if (data.session) {
-        setToken(data.session.access_token)
-        localStorage.setItem('agentos_token', data.session.access_token)
-        const fallback = {
-          id: data.user.id,
-          email: data.user.email,
-          name,
+        if (data.session) {
+          setToken(data.session.access_token)
+          localStorage.setItem('agentos_token', data.session.access_token)
+          const fallback = {
+            id: data.user.id,
+            email: data.user.email,
+            name,
+          }
+          const fullProfile = await fetchProfile(data.user.id, fallback)
+          setUser(fullProfile)
+          return fullProfile
+        } else {
+          return { needsEmailConfirmation: true }
         }
-        const fullProfile = await fetchProfile(data.user.id, fallback)
-        setUser(fullProfile)
-        return fullProfile
-      } else {
-        // Confirmation email sent
-        return { needsEmailConfirmation: true }
+      } catch (err) {
+        try {
+          const data = await api.register({ name, email, password })
+          localStorage.setItem('agentos_token', data.access_token)
+          setToken(data.access_token)
+          const me = await api.getMe()
+          setUser(me)
+          return me
+        } catch {
+          throw err
+        }
       }
     } else {
       const data = await api.register({ name, email, password })

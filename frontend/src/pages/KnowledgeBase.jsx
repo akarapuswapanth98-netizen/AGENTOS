@@ -90,86 +90,94 @@ export default function KnowledgeBase() {
 
     setUploading(true)
     try {
+      let indexedToCloud = false
       if (isSupabaseConfigured && currentWorkspace?.id) {
-        const filePath = `${currentWorkspace.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
+        try {
+          const filePath = `${currentWorkspace.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
 
-        // 1. Upload to Supabase Storage
-        const { error: uploadErr } = await supabase.storage
-          .from('knowledge-files')
-          .upload(filePath, file)
+          // 1. Upload to Supabase Storage
+          const { error: uploadErr } = await supabase.storage
+            .from('knowledge-files')
+            .upload(filePath, file)
 
-        if (uploadErr) throw uploadErr
+          if (!uploadErr) {
+            // 2. Read text content for chunking
+            const textContent = await file.text().catch(() => 'Binary document indexed for retrieval')
+            const rawChunks = textContent
+              .split(/\n\s*\n/)
+              .map((c) => c.trim())
+              .filter((c) => c.length > 20)
+              .slice(0, 10)
 
-        // 2. Read text content for chunking
-        const textContent = await file.text().catch(() => 'Binary document indexed for retrieval')
-        const rawChunks = textContent
-          .split(/\n\s*\n/)
-          .map((c) => c.trim())
-          .filter((c) => c.length > 20)
-          .slice(0, 10)
+            // 3. Insert into knowledge_documents
+            const { data: doc, error: docErr } = await supabase
+              .from('knowledge_documents')
+              .insert({
+                workspace_id: currentWorkspace.id,
+                title: file.name,
+                file_path: filePath,
+                file_type: file.type || 'text/plain',
+                file_size_bytes: file.size,
+                chunk_count: rawChunks.length || 1,
+                status: 'ready',
+                created_by: user?.id,
+              })
+              .select()
+              .single()
 
-        // 3. Insert into knowledge_documents
-        const { data: doc, error: docErr } = await supabase
-          .from('knowledge_documents')
-          .insert({
-            workspace_id: currentWorkspace.id,
-            title: file.name,
-            file_path: filePath,
-            file_type: file.type || 'text/plain',
-            file_size_bytes: file.size,
-            chunk_count: rawChunks.length || 1,
-            status: 'ready',
-            created_by: user?.id,
-          })
-          .select()
-          .single()
+            if (!docErr && doc) {
+              // 4. Insert chunks into embeddings
+              if (rawChunks.length > 0) {
+                const embeddingInserts = rawChunks.map((content, idx) => ({
+                  document_id: doc.id,
+                  workspace_id: currentWorkspace.id,
+                  chunk_index: idx,
+                  content,
+                  metadata: { filename: file.name, size: file.size },
+                }))
 
-        if (docErr) throw docErr
+                await supabase.from('embeddings').insert(embeddingInserts)
 
-        // 4. Insert chunks into embeddings
-        if (rawChunks.length > 0) {
-          const embeddingInserts = rawChunks.map((content, idx) => ({
-            document_id: doc.id,
-            workspace_id: currentWorkspace.id,
-            chunk_index: idx,
-            content,
-            metadata: { filename: file.name, size: file.size },
-          }))
+                // Add to current display
+                setChunks((prev) => [
+                  ...rawChunks.map((c, i) => ({
+                    id: `chunk-new-${i}`,
+                    doc: file.name,
+                    text: c,
+                    score: 0.95 - i * 0.03,
+                    dim: 1536,
+                  })),
+                  ...prev,
+                ])
+              }
 
-          await supabase.from('embeddings').insert(embeddingInserts)
-
-          // Add to current display
-          setChunks((prev) => [
-            ...rawChunks.map((c, i) => ({
-              id: `chunk-new-${i}`,
-              doc: file.name,
-              text: c,
-              score: 0.95 - i * 0.03,
-              dim: 1536,
-            })),
-            ...prev,
-          ])
+              await fetchDocuments()
+              toast.success(`Indexed "${file.name}" into pgvector memory (${rawChunks.length} chunks)`)
+              indexedToCloud = true
+            }
+          }
+        } catch (supabaseErr) {
+          console.warn('Supabase storage fallback to local indexing:', supabaseErr)
         }
+      }
 
-        await fetchDocuments()
-        toast.success(`Indexed "${file.name}" into pgvector memory (${rawChunks.length} chunks)`)
-      } else {
+      if (!indexedToCloud) {
         // Fallback local chunking
         const reader = new FileReader()
         reader.onload = (event) => {
           const content = event.target.result
           const newChunks = String(content)
             .split(/\n\s*\n/)
-            .slice(0, 3)
+            .slice(0, 4)
             .map((t, idx) => ({
               id: `chunk-local-${Date.now()}-${idx}`,
               doc: file.name,
               text: t.trim() || 'Knowledge context snippet',
-              score: 0.92,
+              score: 0.94 - idx * 0.03,
               dim: 1536,
             }))
           setChunks((prev) => [...newChunks, ...prev])
-          toast.success(`Indexed "${file.name}" locally (${newChunks.length} chunks)`)
+          toast.success(`Indexed "${file.name}" into local memory buffer (${newChunks.length} chunks)`)
         }
         reader.readAsText(file)
       }

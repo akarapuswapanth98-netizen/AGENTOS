@@ -85,15 +85,22 @@ export default function Login() {
 
   async function handleOAuth(provider) {
     setError('')
-    if (!isSupabaseConfigured) {
-      toast.info(`To authenticate with ${provider}, configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel. Use 1-Click Demo Access below to explore now!`)
-      return
-    }
     try {
       await loginWithOAuth(provider)
     } catch (err) {
-      setError(err.message || `Failed to authenticate with ${provider}`)
-      toast.error(err.message || `Failed to authenticate with ${provider}`)
+      const msg = err.message || `Failed to authenticate with ${provider}`
+      if (
+        msg.toLowerCase().includes('not enabled') ||
+        msg.toLowerCase().includes('unsupported provider') ||
+        msg.toLowerCase().includes('validation_failed')
+      ) {
+        const provName = provider === 'github' ? 'GitHub' : 'Google'
+        setError(`${provName} OAuth is not enabled in Supabase Dashboard yet. Please sign in with Email/Password or use 1-Click Demo Access below!`)
+        toast.info(`${provName} OAuth disabled in Supabase. Use Email or 1-Click Demo Access!`)
+      } else {
+        setError(msg)
+        toast.error(msg)
+      }
     }
   }
 

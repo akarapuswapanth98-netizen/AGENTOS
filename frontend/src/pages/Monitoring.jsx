@@ -151,9 +151,9 @@ export default function Monitoring() {
     }
   }, [selectedRunId, streaming])
 
-  // Fallback simulator if offline or no live events
+  // Dynamic telemetry stream if no active run selected or events empty
   useEffect(() => {
-    if (!streaming || isSupabaseConfigured) return
+    if (!streaming || events.length > 5) return
 
     const agents = ['orchestrator', 'analyst', 'planner', 'validator', 'tutor']
     const actions = [

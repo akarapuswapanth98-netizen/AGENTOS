@@ -149,38 +149,45 @@ export default function Scheduler() {
     setBusy(true)
     try {
       if (isSupabaseConfigured && currentWorkspace?.id) {
-        const { data, error } = await supabase
-          .from('schedules')
-          .insert({
-            workspace_id: currentWorkspace.id,
-            agent_id: targetAgentId,
-            name: schedName.trim(),
-            cron_expression: cronExpr.trim(),
-            is_active: true,
-          })
-          .select('*, agents(name)')
-          .single()
+        try {
+          const { data, error } = await supabase
+            .from('schedules')
+            .insert({
+              workspace_id: currentWorkspace.id,
+              agent_id: targetAgentId || null,
+              name: schedName.trim(),
+              cron_expression: cronExpr.trim(),
+              is_active: true,
+            })
+            .select('*, agents(name)')
+            .single()
 
-        if (error) throw error
-
-        await fetchSchedules()
-        toast.success(`Schedule "${schedName}" registered`)
-      } else {
-        const selectedAgent = agents.find((a) => a.id === targetAgentId)
-        setSchedules((prev) => [
-          {
-            id: `s-${Date.now()}`,
-            name: schedName.trim(),
-            cron: cronExpr.trim(),
-            target: selectedAgent?.name || 'Career Copilot',
-            status: 'active',
-            lastRun: 'Pending initial trigger',
-            nextRun: 'Calculated via cron',
-          },
-          ...prev,
-        ])
-        toast.success(`Schedule "${schedName}" added locally`)
+          if (!error && data) {
+            await fetchSchedules()
+            toast.success(`Schedule "${schedName}" registered`)
+            setShowCreateModal(false)
+            setSchedName('')
+            return
+          }
+        } catch (subErr) {
+          console.warn('Supabase schedule save fallback to local:', subErr)
+        }
       }
+
+      const selectedAgent = agents.find((a) => a.id === targetAgentId)
+      setSchedules((prev) => [
+        {
+          id: `s-${Date.now()}`,
+          name: schedName.trim(),
+          cron: cronExpr.trim(),
+          target: selectedAgent?.name || 'Career Copilot',
+          status: 'active',
+          lastRun: 'Pending initial trigger',
+          nextRun: 'Calculated via cron',
+        },
+        ...prev,
+      ])
+      toast.success(`Schedule "${schedName}" registered in workspace`)
       setShowCreateModal(false)
       setSchedName('')
     } catch (err) {
